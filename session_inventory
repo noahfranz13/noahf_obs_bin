@@ -1,0 +1,15 @@
+#! /bin/bash
+
+for i in `ls -d /mnt_blc?0/datax*/dibas*/* | awk -F/ '{print $NF}' | sort | uniq`; do
+  racks=`ls -d /mnt_blc?0/datax*/dibas*/$i | wc -l | awk '{print $1}'`
+  whichracks=`ls -d /mnt_blc?0/datax*/dibas*/$i | cut -c9-9 | awk '{printf("%s"),$1}'`
+  ondatax=`ls -d /mnt_blc?0/datax*/dibas*/$i | grep -c /datax/`
+  echo -n "$i racks: $racks $whichracks on datax: $ondatax "
+  cd /mnt_blc?0/datax*/dibas*/$i/*/*
+  scancount=`ls -1 b*0000.fil |& grep -vi "no such file or directory" | wc -l`
+  echo -n "scans: $scancount - "
+  if [[ $scancount > 0 ]]; then 
+    /home/obs/bin/which_band b*0000.fil | awk '{print $2}' | sort | uniq -c | awk '{printf("%s:%s ",$2,$1)}'
+  fi
+  echo " "
+done

@@ -1,0 +1,17 @@
+#! /bin/csh
+
+set EXE = /home/obs/tnd_bot/tnd_slack
+
+set AREWE = `/home/obs/bin/are_we_observing` 
+if ($AREWE == "yes") then
+  exit 0
+endif
+
+set OUTPUT = `/home/obs/bin/are_we_observing -v | tail -1 | awk '{printf("%d:%d\n",$1,$10)}'`
+set SECONDS = `echo $OUTPUT | awk -F: '{print $1}'`
+set LENGTH = `echo $OUTPUT | awk -F: '{print $2 + .2}'`
+
+# assume cron job runs every 5 minutes, and we want to start 10 minutes beforehand
+if ($SECONDS < 615 && $SECONDS > 450) then
+  $EXE -t $LENGTH >& /dev/null &
+endif

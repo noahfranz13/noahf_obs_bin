@@ -1,0 +1,33 @@
+#! /bin/csh
+
+set NOW = `date "+%D %H:%M"`
+
+set SCHEDULE = /home/obs/triggers/gpuspec_schedule
+set LOGFILE = /home/obs/logs/cron_gpuspec
+
+if (`whoami` != root) then
+  echo "you must be root to run this.. exiting"
+  exit 0
+endif
+
+if (`hostname` != blh0) then
+  echo "you must be on blh0 to run this.. exiting"
+  exit 0
+endif
+
+set DOIT = `grep -v '^#' $SCHEDULE | grep -c "$NOW"`
+if ($DOIT == 1) then
+  echo -n "RUNNING: " >>& $LOGFILE
+  date >>& $LOGFILE
+  echo "stopping everything (to be sure):" >>& $LOGFILE
+  /home/obs/bin/blctl quickstop blc00 blc01 blc02 blc03 blc04 blc05 blc06 blc07 blc10 blc11 blc12 blc13 blc14 blc15 blc16 blc17 blc20 blc21 blc22 blc23 blc24 blc25 blc26 blc27 >>& $LOGFILE
+  echo "running gpuspec:" >>& $LOGFILE
+  /home/obs/bin/do_all_gpuspec /datax/dibas >>& $LOGFILE
+  echo ============================================ >>& $LOGFILE
+
+  set TMPFILE = /tmp/mail_cron_gpuspec.$$
+  date > $TMPFILE
+  mail -s "started gpuspec at green bank" lebofsky@berkeley.edu < $TMPFILE
+  /bin/rm $TMPFILE
+
+endif

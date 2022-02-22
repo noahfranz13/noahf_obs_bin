@@ -1,0 +1,39 @@
+#! /usr/bin/env perl
+
+if ($ARGV[0] eq "") {
+  print "compare two files (sizes and md5s of first/last 1M bytes)\n";
+  exit (1);
+  }
+
+$firstsize = `/bin/ls -l $ARGV[0] | awk '{print \$5}'`;
+$secondsize = `/bin/ls -l $ARGV[1] | awk '{print \$5}'`;
+chomp $firstsize;
+chomp $secondsize;
+
+if ($firstsize != $secondsize) {
+  print "sizes differ ( $firstsize / $secondsize )\n";
+  exit (1);
+  }
+
+$firstmd5 = `head -c 1000000 $ARGV[0] | md5sum | awk '{print \$1}'`;
+$secondmd5 = `head -c 1000000 $ARGV[1] | md5sum | awk '{print \$1}'`;
+chomp $firstmd5;
+chomp $secondmd5;
+ 
+if ($firstmd5 ne $secondmd5) {
+  print "head md5s differ ( $firstmd5 / $secondmd5 )\n";
+  exit (1);
+  }
+
+$firstmd5 = `tail -c 1000000 $ARGV[0] | md5sum | awk '{print \$1}'`;
+$secondmd5 = `tail -c 1000000 $ARGV[1] | md5sum | awk '{print \$1}'`;
+chomp $firstmd5;
+chomp $secondmd5;
+ 
+if ($firstmd5 ne $secondmd5) {
+  print "tail md5s differ ( $firstmd5 / $secondmd5 )\n";
+  exit (1);
+  }
+
+exit (0);
+

@@ -1,0 +1,17 @@
+#! /bin/bash
+
+TMPFILE=/tmp/parse_test_drives.out.$$
+
+/home/obs/bin/test_drives >& $TMPFILE
+COUNT=`grep -vc enc $TMPFILE`
+echo $COUNT | awk '{printf("(%2d) ",$1)}'
+BADCOUNT=`grep -v enc $TMPFILE | grep -vc " 0                  0               0                      0                     0"`
+if [ $BADCOUNT -eq 0 ]; then
+  echo "0"
+else
+  echo -n $BADCOUNT
+  grep -v " 0                  0               0                      0                     0" $TMPFILE | grep -v enc | awk '{printf(" [%s:%s] (%s %s %s %s %s)",$1,$2,$4,$5,$6,$7,$8)}'
+  echo " "
+fi
+
+rm $TMPFILE

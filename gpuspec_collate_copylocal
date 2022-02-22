@@ -1,0 +1,48 @@
+#! /bin/csh
+
+if (x == x$2) then
+  echo "gpuspec_collage guppi_root_name collate_dir"
+  exit 1
+endif
+
+set INFILE = $1
+
+echo -n "starting: "
+date
+set START = `date '+%s'`
+
+foreach i (`find /mnt_* -name '*'$INFILE'*' -print | grep -v '.raw$'`) 
+  echo -n "retrieving: $i"
+  set BASENAME = `basename $i`
+  if (-f $2/$BASENAME) then
+    set THISSIZE = `ls -l $2/$BASENAME | awk '{print $5}'`
+    set THATSIZE = `ls -l $i | awk '{print $5}'`
+    if ($THISSIZE != $THATSIZE) then
+      echo "  WARNING: already retrieved by different sizes - exiting"
+      exit 1
+    endif
+    echo " (already gotten)"
+  else
+    cp -f $i $2/$BASENAME 
+    echo " (copied)"
+  endif   
+end
+
+cd $2
+
+set NODES = `ls -1 *${INFILE}*.gpuspec.0000.fil | sed 's/blc//' | awk -F_ '{printf("%s",$1)}'`
+
+foreach i (.gpuspec.0000.fil .gpuspec.0001.fil .gpuspec.0002.fil .gpuspec.8.0001.fil)
+  echo -n "splicing $i files : "
+  /usr/local/sigproc/bin/splice2 blc*${INFILE}${i} -o spliced_blc${NODES}_${INFILE}${i}
+  echo "(done)"
+end 
+
+echo "running prepfold on .8.0001.fil product:"
+/home/obs/bin/prepfold_wrapper spliced_blc${NODES}_${INFILE}.gpuspec.8.0001.fil
+
+echo -n "ending: "
+date
+set END = `date '+%s'`
+set SECONDS = `echo $START $END | awk '{print $2-$1}'`
+echo "total: $SECONDS seconds"

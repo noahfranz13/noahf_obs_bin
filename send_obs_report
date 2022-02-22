@@ -1,0 +1,21 @@
+#! /bin/csh
+
+set MAILINGLIST = "mattl@ssl.berkeley.edu siemion@berkeley.edu "
+
+set OBSREPORTDIR = /home/obs/obs_reports
+
+set OBSREPORTEXE = /home/obs/bin/obs_report
+
+if (x == x$1) then
+  echo 'send_obs_report base_dir (where base_dir is a name like "AGBT16A_999_233")'
+  exit 0
+endif
+
+if (`hostname` != "blh0") then
+  echo 'have to be on blh0 to run.'
+  exit 0
+endif
+
+ssh bls0 $OBSREPORTEXE $1 > $OBSREPORTDIR/$1
+
+mail -s "GB observation report for $1" $MAILINGLIST < $OBSREPORTDIR/$1

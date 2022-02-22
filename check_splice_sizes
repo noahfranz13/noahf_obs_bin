@@ -1,0 +1,21 @@
+#! /usr/bin/env perl
+
+# check_splice_sizes file1 file2 .. fileN spliced_file
+# reports "good" or "bad"
+# good = spliced_file is over 99% the size of total fileN file sizes
+
+$numfiles = @ARGV;
+
+$total = 0;
+for ($i = 0; $i < ($numfiles - 1); $i++ ) {
+  $total += (stat $ARGV[$i])[7];
+  }
+$final = (stat $ARGV[$numfiles-1])[7];
+
+if ($total == 0) { print "bad"; $percent = 0; $final = 0 ;}
+else {
+  $percent = ($final/$total)*100;
+  if ($percent>92) { print "good";} else { print "bad"; }
+  }
+
+print " - parts: $total - splice: $final - % $percent\n";

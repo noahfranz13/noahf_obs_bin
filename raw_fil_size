@@ -1,0 +1,11 @@
+#! /bin/csh
+
+set TOTAL = /home/obs/bin/total
+
+if (x == x$1) then
+  echo "raw_fil_size root_dir"
+  exit 0
+endif
+
+echo -n ".raw : "
+find $1 -name "*.raw" -ls | $TOTAL 7

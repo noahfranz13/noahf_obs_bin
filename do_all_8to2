@@ -1,0 +1,12 @@
+#! /bin/csh
+
+if (x == x$1) then
+  echo "which root directory?"
+  exit 1
+endif
+
+foreach r (0)
+  foreach h (0 1 2 3 4 5 6 7)
+    ssh  -o BatchMode=yes -o ConnectTimeout=1 blc$r$h '/home/obs/bin/8to2 '$1' >& /home/obs/logs/8to2.out.blc'$r$h &
+  end  
+end

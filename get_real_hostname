@@ -1,0 +1,17 @@
+#! /bin/csh
+
+# get_real_hostname directory
+
+# get hostname location of directory (in case it's not locally mounted)
+
+set HOSTNAME = `hostname`
+cd $1
+set MOUNT = `df . | awk '{print $1}' | tail -1`
+set ISMOUNT = `echo $MOUNT | grep -c :`
+if ($ISMOUNT == 1) then
+  set SSHHOST = `echo $MOUNT | awk -F: '{print $1}'`
+echo $SSHHOST
+  set HOSTNAME = `ssh $SSHHOST hostname`
+endif
+echo $HOSTNAME
+

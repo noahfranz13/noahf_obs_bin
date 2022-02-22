@@ -1,0 +1,6 @@
+#! /bin/csh
+
+foreach i (`find . -name "*.gpuspec.8.0001.fil" -print`)
+  echo $i
+  /bin/rm $i
+end

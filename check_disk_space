@@ -1,0 +1,3 @@
+#!/bin/bash
+
+python /home/obs/calendar/gbt_scraper.py | python /home/obs/bin/check_storage.py

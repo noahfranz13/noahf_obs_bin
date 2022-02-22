@@ -1,0 +1,18 @@
+#! /bin/csh
+
+if (x == x$1) then
+  echo 'which root directory?'
+  exit 1
+endif  
+
+foreach r (0)
+foreach h (0 1 2 3 4 5 6 7)
+  echo -n blc$r$h :" "
+  ssh -o BatchMode=yes -o ConnectTimeout=1 blc$r$h 'find '$1' -name "blc*guppi*raw*"' > /tmp/check_8to2.$$
+  set ALL = `grep guppi /tmp/check_8to2.$$ | egrep -cv '(PSR|B1937)'`
+  set TWOBIT = `grep 2bit /tmp/check_8to2.$$ | egrep -cv '(PSR|B1937)'`
+  set DELTA = `echo $ALL $TWOBIT | awk '{print $1-$2}'`
+  echo $TWOBIT out of $ALL '('$DELTA')'
+end
+
+/bin/rm /tmp/check_8to2.$$

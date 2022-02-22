@@ -1,0 +1,33 @@
+#! /bin/csh
+
+set WORKSPACE = /datax2/users/pulsar_calibrators/processing_hub/
+
+if (x == x$1) then
+  echo push_to_blc18_and_process guppi_base_name, i.e. guppi_12345_23456_DIAG_PSR_J1234+456_0002 
+  exit 0
+endif
+
+set BASENAME = $1
+
+if (! -d /mnt_blc18/$WORKSPACE) then
+  echo "mounting blc18 as it wasn't mounted already..."
+#  /home/obs/bin/mount_datas_10g blc18
+#  sleep 5
+endif
+
+# VERSION: reduce then copy products
+echo "creating pulsar/midres products"
+time /home/obs/bin/gpuspec_pulsar_product $BASENAME
+
+echo "copying results to blc18 workspace"
+time cp blc*${BASENAME}*fil /mnt_blc18/$WORKSPACE
+
+# VERSION: copy raw then reduce
+#echo "copying raw data to work space on blc18"
+#time cp ${BASENAME}*raw /mnt_blc18/$WORKSPACE
+#
+#echo "ssh'ing to blc18 and creating filterbanks"
+#
+#ssh blc18 "/home/obs/bin/gpuspec_pulsar_product $WORKSPACE/$BASENAME"
+
+echo "done!"

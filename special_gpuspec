@@ -1,0 +1,140 @@
+#! /bin/csh
+
+# special_gpuspec top_data_dir [cron]
+
+# special easily hackable version of do_gpuspec for quick analysis
+# don't care able .fil sizes as we're not removing anything
+
+set PRODUCTS = "-f 1048576,8,1024 -t 51,128,3072"
+
+##### PARKES/cuda-8.0
+setenv PATH /usr/local/cuda-8.0/bin:$PATH
+setenv LD_LIBRARY_PATH /usr/local/cuda-8.0/lib64
+
+set GPUSPECEXE = /usr/local/listen/bin/gpuspec
+
+set TRIGGER = /home/obs/triggers/stop_gpuspec
+
+set TMPFILE = /tmp/gpuspec.tmp.$$
+
+if (x == x$1) then
+  echo "which root directory?"
+  exit 1
+endif
+
+set ISCRON = "no"
+if (xcron == x$2) then
+  set ISCRON = "yes"
+endif
+
+set THISDIR = `pwd`
+
+if (x == x$2) then
+  set HOSTNAME = `hostname`
+else
+  set HOSTNAME = $2
+endif
+
+set HOSTRUNNING = /home/obs/triggers/special_gpuspec_${HOSTNAME}_running
+
+# check if host running 
+
+if (-f $HOSTRUNNING) then
+  # only report if not in a cron job (otherwise log will get noisy)
+  if ($ISCRON == "no") then 
+    echo "gpuspec is already running on host $HOSTNAME - exiting..."
+    echo "remove triggerfile: $HOSTRUNNING if you feel this is bogus"
+    echo " "
+    echo "output of pgrep -fl gpuspec:"
+    echo " "
+    pgrep -fl gpuspec
+  endif
+  exit 1
+endif
+
+touch $HOSTRUNNING
+
+# foreach i (`find $1 -name "*guppi_57688_04896_J2022+2854*raw" -print | sed 's/.[0-9][0-9][0-9][0-9].raw//' | sort | uniq`)
+foreach i (`find $1 -name "*guppi*raw" -print | sed 's/.[0-9][0-9][0-9][0-9].raw//' | sort | uniq`)
+
+  if (-f $TRIGGER) then
+    echo "stopping because triggerfile: $TRIGGER exists..."
+    rm $HOSTRUNNING
+    exit 0
+  endif
+
+  cd $THISDIR
+
+  set BASENAME = `basename $i`
+  set DIRNAME = `dirname $i`
+
+  cd $DIRNAME
+
+  echo $i
+  echo =====================================================================
+
+  set START = `date '+%s'`
+  echo -n "starting: "
+  date
+
+  set GSERROR = 0
+
+  set BITS = 8
+  echo "setting bit depth to $BITS"
+
+  if (-f ${BASENAME}.gpuspec.0000.fil) then
+    echo ".fil files exist - already reduced - skipping fixup/gpuspec..."
+  else 
+
+    /usr/local/bin/bl_fixup.rb ${BASENAME}.[0-9][0-9][0-9][0-9].raw |& tee $TMPFILE
+    if ($status == 1) then
+      echo "error during fixup..."
+      foreach BADFILE (`awk '$3=="error" {print $1}' $TMPFILE`)
+        mv $BADFILE bad_${BADFILE}.corrupted_headers 
+      end
+    endif
+    
+    $GPUSPECEXE -i ${BASENAME}.[0-9][0-9][0-9][0-9].raw -b $BITS -B 2 $PRODUCTS -o ${BASENAME}.gpuspec.
+
+    if ($status == 1) then
+      echo "error during gpuspec..."
+      set GSERROR = 1
+    endif
+
+    echo -n "ending: "
+    date
+
+  endif # already gpuspec'ed
+
+  echo "actual .fil files:"
+  ls -l ${BASENAME}.gpuspec.000?.fil
+
+  if ( ($GSERROR == 0) ) then
+    set CHECKNAME = `echo ${BASENAME} | grep -c '^blc[0-9]'`
+    if ($CHECKNAME == 0) then
+      echo "renaming guppi_ files to add blcXY prefix:"
+      foreach j (`ls ${BASENAME}*`)
+        set NEWNAME = ${HOSTNAME}_$j
+        echo mv $j $NEWNAME
+        mv $j $NEWNAME
+      end
+    endif
+    # ALL DONE - create this file to let everybody know (note checkname still being used from above "blc" check)
+    if ($CHECKNAME == 0) then
+      touch ${HOSTNAME}_${BASENAME}.gpuspec.done
+    else
+      touch ${BASENAME}.gpuspec.done
+    endif
+  else
+    echo "not renaming .raw files due to error"
+  endif
+
+  set END = `date '+%s'`
+  set DIFF = `echo $START $END | awk '{print $2-$1}'`
+  echo number of total seconds: $DIFF
+  echo ====================================
+
+end
+
+# no more files - show's over - remove running trigger and exit
+rm $HOSTRUNNING

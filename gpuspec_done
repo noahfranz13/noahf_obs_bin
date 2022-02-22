@@ -1,0 +1,6 @@
+#! /bin/csh
+
+foreach i (`find $1 -name "blc*.gpuspec.0000.fil" | sed s/.gpuspec.0000.fil//`)
+  echo $i
+  touch ${i}.gpuspec.done
+end

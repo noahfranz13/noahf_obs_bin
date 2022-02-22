@@ -1,0 +1,38 @@
+#! /bin/csh
+
+set TMPFILE = /tmp/test_drives.$$
+
+echo enc slt dev Reallocated_Sector_Ct Reported_Uncorrect Command_Timeout Current_Pending_Sector Offline_Uncorrectable
+foreach i (`/usr/local/bin/megacli -pdlist -a0 | awk '$1 == "Slot" && $2 == "Number:" {printf("%s:",$3)}; $1 == "Enclosure" && $2 == "Device" {printf("%s:",$4)}; $1 == "Device" && $2 == "Id:" {print $3}'`)
+  set ENC = `echo $i | awk -F: '{print $1}'`
+  set SLOT = `echo $i | awk -F: '{print $2}'`
+  set DEV = `echo $i | awk -F: '{print $3}'`
+
+  /usr/sbin/smartctl -a -d megaraid,$DEV /dev/sda >& $TMPFILE
+  set REALLOCATED = `grep Reallocated_Sector_Ct $TMPFILE | awk '{print $NF}'`
+  set REPORTUNCORRECTED = `grep Reported_Uncorrect $TMPFILE | awk '{print $NF}'`
+  set COMMANDTIMEOUT = `grep Command_Timeout $TMPFILE | awk '{print $NF}'`
+  set CURRENTPENDINGSECTOR = `grep Current_Pending_Sector $TMPFILE | awk '{print $NF}'`
+  set OFFLINEUNCORRECTABLE = `grep Offline_Uncorrectable $TMPFILE | awk '{print $NF}'`
+  set TOTALFAILURE = `grep -c "INQUIRY failed" $TMPFILE`
+  if (`echo $COMMANDTIMEOUT | wc | awk '{print $3}'` > 10) then # more than 9 digit timeout? ignore it.
+    set COMMANDTIMEOUT = 0
+  endif
+  if ($TOTALFAILURE > 0) then
+    set REALLOCATED = 999
+    set REPORTUNCORRECTED = 999
+    set COMMANDTIMEOUT = 999
+    set CURRENTPENDINGSECTOR = 999
+    set OFFLINEUNCORRECTABLE = 999
+  endif
+
+  echo $ENC $SLOT $DEV $REALLOCATED $REPORTUNCORRECTED $COMMANDTIMEOUT $CURRENTPENDINGSECTOR $OFFLINEUNCORRECTABLE | awk '{printf("%3d%4d%4d%22d%19d%16d%23d%22d\n",$1,$2,$3,$4,$5,$6,$7,$8,$9)}'
+
+  if (x-v == x$1) then
+    echo "======= ============================================"
+    awk '{printf("        %s\n",$0)}' $TMPFILE
+    echo "======= ============================================"
+  endif
+end
+
+/bin/rm -f $TMPFILE

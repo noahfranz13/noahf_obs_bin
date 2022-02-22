@@ -1,0 +1,513 @@
+#!/bin/bash
+
+# Ensure that we run as obs
+if [ $UID -ne $(id -u obs) ]
+then
+  echo 'switching to obs'
+  exec sudo -u obs $0 "${@}"
+  # Should "never" get here
+  exit 1
+fi
+
+SIM=''
+TEST=''
+VERBOSE=''
+# Manager mode is always enabled except for the
+# "start_manual_mode_and_program_fpgas" command.
+MANAGER='-m'
+# Parse options
+while getopts 'amstv' OPT
+do
+  case "${OPT}" in
+    a) echo "auto astrid mode is the default now, no need for '-a' option"
+      ;;
+    m) MANAGER='-m'
+      ;;
+    s) SIM='-s'
+      ;;
+    t) TEST='-t'
+      ;;
+    v) VERBOSE='-v'
+      ;;
+    ?) exit 1
+      ;;
+  esac
+done
+shift $((OPTIND-1))
+
+# sim and test are mutually exclusive
+if [ -n "${SIM}" -a -n "${TEST}" ]
+then
+  echo cannot do both sim and test at the same time
+  exit 1
+fi
+simtest="${SIM:+simulate}${TEST:+test}"
+
+# Get hosts from /home/obs/.blctl_hosts
+# NOTE: hosts will contain embedded newlines.  The embedded newlines are
+# treated as spaces when $hosts appears unquoted, or as embedded newlines
+# when "$hosts" is quoted.
+hosts=$(compgen -W "`cat /home/obs/.blctl_hosts`")
+
+# Ensure that no duplicate hosts were specified
+dups=`echo "$hosts" | sort | uniq -d`
+if [ -n "${dups}" ]
+then
+  echo "error: duplicate host name(s) given: " ${dups}
+  exit 1
+fi
+
+# Save and remote the sub-command part of the command line
+cmd=$1
+shift
+
+# Use sudo user's name if available
+user=${SUDO_USER:-`whoami`}
+
+# For *start* commands, make sure that no hosts are given on the command line
+# (old habits die hard for users).  Also, log formatting is slightly different
+# for *start* commands.
+case $cmd in
+  *start*)
+    if [ -n "${1}" ]
+    then
+      echo "error: hosts are no longer given on command line for start commands"
+      echo "hosts are now specified in '/home/obs/.blctl_hosts'"
+      echo "use 'blctl hosts' to check host order that will be used"
+      exit 1
+    fi
+    # Log start command
+    echo `date '+%Y-%m-%d %H:%M:%S %Z'` `hostname` "${user}" "$0" "${cmd}" "["$hosts"]" >> /home/obs/logs/blctl.log
+    ;;
+
+  *)
+    # Log non-start command
+    echo `date '+%Y-%m-%d %H:%M:%S %Z'` `hostname` "${user}" "$0" "${cmd}" "$@" >> /home/obs/logs/blctl.log
+esac
+
+source /opt/dibas/dibas.bash
+
+PATH="/home/obs/bin:${PATH}"
+NOW=$(date)
+
+cd /home/obs
+
+function start_dealer()
+{
+  if [ `hostname` == blh0 ]
+  then
+    # Rotate head node /datax logs
+    echo -n 'rotating head node /datax logs...'
+    sudo /usr/sbin/logrotate -s /datax/.blh_logrotate.state ${DIBAS_DIR}/etc/blh_logrotate.conf
+    echo done
+    # Create .out/.err files with current date as first line
+    for f in {broker,auto_dealer}.{out,err}
+    do
+      echo $NOW > /datax/$f
+    done
+
+    # Start broker
+    echo -n "starting broker "
+    circusctl --endpoint tcp://blh0:5555 start broker --waiting
+
+    # Wait for players to register with broker
+    if [ "${1}" != "nowait" ] && ! wait_for_players "${num_players}"
+    then
+      echo 'problem with players, cannot continue'
+      exit 1
+    fi
+
+    if [ -n "${SIM}" -o -n "${TEST}" -o -n "${MANAGER}" ]
+    then
+      echo "NOT starting auto_dealer in ${simtest:-manager} mode"
+      echo "blctl: NOT starting auto_dealer in ${simtest:-manager} mode" >> /datax/auto_dealer.out
+      echo "blctl: NOT starting auto_dealer in ${simtest:-manager} mode" >> /datax/auto_dealer.err
+    else
+      echo -n 'starting auto_dealer '
+      circusctl --endpoint tcp://blh0:5555 start auto_dealer --waiting
+    fi
+  else
+    echo "NOT starting broker/dealer processes (not running on blh0)"
+  fi
+}
+
+function start()
+{
+  # trigger stop of gpuspec
+  if [ -n "${SIM}" -o -n "${TEST}" ]
+  then
+    echo "NOT touching gpuspec 'stop' trigger in ${simtest} mode"
+  else
+    echo "touching gpuspec 'stop' trigger"
+    #touch /home/obs/triggers/stop_rewrite
+    #touch /home/obs/triggers/stop_8to2
+    #touch /home/obs/triggers/stop_ramdisk
+    #touch /home/obs/triggers/stop_gpuspec
+
+    ## TODO Not sure what this is used for, but it seems good to do this only
+    ## for real observations (if/when we decide to uncomment it).
+    #echo "setting observation status to on"
+    #sudo sh -c 'echo "on" > /home/obs/triggers/observation_status'
+  fi
+
+  # put hosts that are running in a file (for latest obs report)
+  echo "$@" > /home/obs/triggers/hosts_running 
+
+  # preemptive restart of dnsmasq
+  echo "restarting dnsmasq out of an abundance of caution:"
+  sudo /etc/init.d/dnsmasq restart
+
+  # Start players
+  sudo /home/obs/bin/start_players.sh $SIM $TEST "$@"
+
+  # Start Redis gateway processes
+  echo -n 'starting guppidaq_redis_gateway on:'
+  i=0
+  for host in "$@"
+  do
+    if [ $((i % 8)) == 0 ]
+    then
+      echo -ne '\n  '
+    fi
+    i=$((i+1))
+    echo -n " $host"
+    circusctl --endpoint tcp://${host}:5555 start redisgw >& /dev/null --waiting &
+  done
+  echo
+  wait
+
+  # Start "disk watcher" processes
+  echo -n 'starting disk watchers on:'
+  i=0
+  for host in "$@"
+  do
+    if [ $((i % 8)) == 0 ]
+    then
+      echo -ne '\n  '
+    fi
+    i=$((i+1))
+    echo -n " $host"
+    # This should always be running, but sometimes it hasn't been
+    # (not sure why, but logging now works so maybe we'll find out).
+    # Sometimes one of its threads will die, so re restart it every time.
+    circusctl --endpoint tcp://${host}:5555 restart bl_disk_watch >& /dev/null --waiting &
+  done
+  echo
+  wait
+
+  start_dealer
+
+  if [ -n "${MANAGER}" ]
+  then
+    echo 'NOT setting blcXX_observing redis keys in manager mode'
+  else
+    # update redis keys to show which nodes are on or off
+    hosts="${@:-$(echo blc{0..0}{0..7})}"
+    for h in blc{0..7}{0..7} #blc18
+    do
+      # bash has double bracket tests "[[ ... ]]" in addition to single bracket
+      # tests "[ ... ]".  The double bracket tests support the "=~" regexp
+      # matching operator, but the single bracket test do not.
+      if [[ "${hosts}" =~ "${h}" ]]
+      then
+        state=on
+      else
+        state=off
+      fi
+      redis-cli set ${h}_observing ${state} > /dev/null
+    done
+  fi
+
+  if [ -n "${MANAGER}" ]
+  then
+    echo 'NOT running bl_astrid in manager mode'
+
+    echo 'starting IF monitor'
+    circusctl --endpoint tcp://blh0:5555 start ifmonitor --waiting
+  elif [ -n "${SIM}" -o -n "${TEST}" ]
+  then
+    echo "NOT waiting for bl_astrid in ${simtest} mode"
+  else
+    echo 'running bl_astrid automagically'
+    bl_astrid
+
+    echo 'getting IF info from IFManager and setting OBSFREQ'
+    update_obsfreq
+  fi
+
+  # Start GBT status loop processes
+  echo -n 'starting gbtstatus_loop on:'
+  i=0
+  for host in "$@"
+  do
+    if [ $((i % 8)) == 0 ]
+    then
+      echo -ne '\n  '
+    fi
+    i=$((i+1))
+    echo -n " $host"
+    circusctl --endpoint tcp://${host}:5555 start gbtstatus >& /dev/null --waiting &
+  done
+  echo
+  wait
+
+  if [ -n "${SIM}" -o -n "${TEST}" ]
+  then
+    echo "NOT waiting for gbtstatus in ${simtest} mode"
+  elif ! /home/obs/bin/wait_for_gbtstatus.sh ${num_players}
+  then
+    echo "ERROR gbtstatus seems to be problematic,"
+    echo "critical metadata cannot be retrieved!"
+    echo
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    echo "!!! DO NOT OBSERVE UNTIL THIS CONDITION IS !!!"
+    echo "!!! RESOLVED AND THE BACKEND IS RESTARTED  !!!"
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    echo
+    echo "The /datax/gbtstatus.err files on the *compute* nodes"
+    echo "may contain some useful diagnostic messages."
+    exit 1
+  fi
+}
+
+function set_mode()
+{
+  echo 'running bl_astrid to "set the mode"'
+  bl_astrid
+
+  echo 'getting IF info from IFManager and setting OBSFREQ'
+  update_obsfreq
+}
+
+function stop_dealer()
+{
+  if [ `hostname` == blh0 ]
+  then
+    # Stop broker
+    echo -n 'stopping broker '
+    circusctl --endpoint tcp://blh0:5555 stop broker --waiting
+
+    # Stop auto_dealer
+    echo -n 'stopping auto_dealer '
+    circusctl --endpoint tcp://blh0:5555 stop auto_dealer --waiting
+
+    # Stop IF monitor
+    echo -n 'stopping IF monitor '
+    circusctl --endpoint tcp://blh0:5555 stop ifmonitor --waiting
+  else
+    echo "NOT stopping broker/dealer processes (not running on blh0)"
+  fi
+}
+
+function stop()
+{
+  sudo /home/obs/bin/kill_players.sh "$@"
+
+  # Stop Redis gateway processes
+  echo -n 'stopping guppidaq_redis_gateway on:'
+  i=0
+  for host in "$@"
+  do
+    if [ $((i % 8)) == 0 ]
+    then
+      echo -ne '\n  '
+    fi
+    i=$((i+1))
+    echo -n " $host"
+    circusctl --endpoint tcp://${host}:5555 stop redisgw --waiting >& /dev/null &
+  done
+  echo
+  wait
+
+  # Stop GBT status loop processes
+  echo -n 'stopping gbtstatus_loop on:'
+  i=0
+  for host in "$@"
+  do
+    if [ $((i % 8)) == 0 ]
+    then
+      echo -ne '\n  '
+    fi
+    i=$((i+1))
+    echo -n " $host"
+    circusctl --endpoint tcp://${host}:5555 stop gbtstatus --waiting >& /dev/null &
+  done
+  echo
+  wait
+
+  # Nuke shared memory segments
+  nuke_shms.sh "$@"
+
+  # update redis keys to show which nodes are on or off
+  for h in blc{0..7}{0..7} #blc18;
+  do
+    redis-cli set ${h}_observing off  > /dev/null
+  done
+
+  stop_dealer
+
+  # remove gpuspec stop trigger stop of rewrite scripts
+  if [ -n "${SIM}" -o -n "${TEST}" ]
+  then
+    echo "NOT removing gpuspec 'stop' trigger in ${simtest} mode"
+  else
+    echo "setting observation status to off"
+    # sudo sh -c 'echo "off" > /home/obs/triggers/observation_status'
+    echo "off" > /home/obs/triggers/observation_status
+
+    echo "removing gpuspec 'stop' trigger"
+    #/bin/rm -f /home/obs/triggers/stop_rewrite
+    #/bin/rm -f /home/obs/triggers/stop_8to2
+    #/bin/rm -f /home/obs/triggers/stop_ramdisk
+    #/bin/rm -f /home/obs/triggers/stop_gpuspec
+  fi
+
+}
+
+function post_bandpass()
+{
+  fname=~obs/bandpass_plots/$(date +'gbt-bandpass-%Y%m%d-%H%M%S.png')
+  bl_redis_plot.rb -d ${fname}/png
+  curl -sS \
+    -F file=@$fname \
+    -F channels='#gbt_observations' \
+    -F token='</home/obs/.slack_api_tester.token' \
+    -F title='Latest GBT Bandpass' \
+    https://slack.com/api/files.upload > /dev/null
+}
+
+function ifmonitor()
+{
+  case "$1" in
+    off|stop)
+      echo 'stopping IF monitor'
+      circusctl --endpoint tcp://blh0:5555 stop ifmonitor --waiting
+      ;;
+    *)
+      echo 'restarting IF monitor'
+      circusctl --endpoint tcp://blh0:5555 restart ifmonitor --waiting
+      ;;
+  esac
+}
+
+function finish()
+{
+  /home/obs/bin/do_all_rewrite /datax
+}
+
+num_players=0
+if [ -z "${TEST}" ]
+then
+  # Count all hosts
+  num_players=$(echo "${hosts}" | wc -w)
+else
+  # Count non-blcX0 hosts
+  num_players=$(echo "${hosts/blc*0/}" | wc -w)
+fi
+
+if [ "${num_players}" -eq 0 ]
+then
+  echo 'no usable players given'
+  exit 1
+fi
+
+case $cmd in
+  stop|fullstop)
+    stop blc{0..7}{0..7} #blc18
+    # obs_stop_email is outdated and broken so no longer attempting to run that
+    # if [ -n "${SIM}" -o -n "${TEST}" ]
+    # then
+    #   echo "NOT sending 'stop' email in ${simtest} mode"
+    # else
+    #   /home/obs/bin/obs_stop_email
+    # fi
+    ;;
+
+  quickstop)
+    stop blc{0..7}{0..7} #blc18
+    ;;
+
+  restart)
+    stop blc{0..7}{0..7} #blc18
+    start $hosts
+    echo 'OK ready'
+    ;;
+
+  start_manual_mode_and_program_fpgas)
+    echo "WARNING: You are about to start in non-manager mode!"
+    echo "WARNING: This WILL program the FPGAs immediately!"
+    echo "WARNING: You have 5 seconds to press CTRL-C to abort!"
+    for i in 5 4 3 2 1
+    do
+      echo -n "${i}..."
+      sleep 1
+    done
+    echo 0
+    # Set MANAGER to empty string to start in non-manager mode
+    MANAGER=''
+    echo "Starting in non-manager mode!"
+    ;& # Fall-through to normal start, which must be the next case clause!
+
+  start|fullstart)
+    echo ${cmd}': doing a "safety stop" (for your own good)'
+    stop blc{0..7}{0..7} #blc18
+    echo ${cmd}': now doing a "start"'
+    start $hosts
+    echo 'OK ready'
+    ;;
+
+  quickstart)
+    echo ${cmd}': NOT doing a "safety stop"'
+    start $hosts
+    echo 'OK ready'
+    ;;
+
+  # finish) stop; finish;;
+  finish)
+    echo "we don't need to do this anymore - just do stop"
+    ;;
+
+  start_dealer)
+    # Don't know how many players to expect, so don't wait
+    start_dealer nowait
+    ;;
+
+  stop_dealer)
+    stop_dealer
+    ;;
+
+  reduce)
+    # sudo /home/obs/bin/do_all_gpuspec /datax/dibas "$@"
+    # we're moving to rawspec for real in the 20A semester! - mattl 02/03/20
+    sudo /home/obs/bin/do_all_rawspec /datax/dibas "$@"
+    ;;
+
+  reducestatus)
+    all_nodes_bg -n "ls /datax/dibas/*/*/*/g*0000.raw |& grep -v 'cannot access' | grep -c 0000.raw" | column -c 70
+    ;;
+
+  ifmonitor)
+    ifmonitor "$@"
+    ;;
+
+  post_bandpass)
+    post_bandpass
+    ;;
+
+  setmode|set_mode)
+    set_mode
+    ;;
+
+  hosts)
+    echo "$hosts" | paste -d ' ' - - - -  - - - - | \
+      awk '{print "Bank", substr("ABCDEFGHXXX", NR, 1) ":", $0}'
+    ;;
+
+  hostlist)
+    echo $hosts
+    ;;
+
+  #TODO start_hpguppi) start_hpguppi.sh "$@"; start_dealer;;
+  #TODO stop_hpguppi) kill_hpguppi.sh "$@"; stop_dealer;;
+  *) echo "usage: $(basename $0) [-s|-t] [-v] {start|stop|restart|quickstop|reduce|reducestatus}"
+esac

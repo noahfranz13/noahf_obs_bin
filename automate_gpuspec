@@ -1,0 +1,25 @@
+#! /bin/csh
+
+if (-f /home/obs/triggers/stop_automate_gpuspec) then
+  exit 0
+endif
+
+set AREWE = `/home/obs/bin/are_we_observing`
+
+set GPUSPEC = `ls /home/obs/triggers | grep gpuspec_ | grep -c _running`
+
+set CURCOUNT = `/home/obs/bin/cur_data_dir | awk '{print $NF}'`
+
+echo $AREWE $GPUSPEC $CURCOUNT
+exit 0
+
+if ($AREWE == "no" && $GPUSPEC == 0) then
+  rm /home/obs/triggers/stop_gpuspec >& /dev/null
+  /home/obs/bin/do_all_gpuspec /datax/dibas >& /dev/null
+  exit 0
+endif
+
+if ($AREWE == "yes" && $GPUSPEC > 0) then
+  touch /home/obs/triggers/stop_gpuspec
+  exit 0
+endif

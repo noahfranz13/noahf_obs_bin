@@ -1,0 +1,17 @@
+#!/bin/bash
+# Connect to a list of screens
+
+if [ ! -z "$STY" ]; then
+    echo we are already in screen $STY
+    exit 1
+fi
+
+NUM_SCREENS=$2
+NUM_SCREENS="${NUM_SCREENS:-10}"
+
+LAST_SCREEN="$((NUM_SCREENS-1))"
+for x in `seq 0 $LAST_SCREEN`
+do
+  echo screen -r ${1}${x}of${NUM_SCREENS}
+  screen -r ${1}${x}of${NUM_SCREENS}
+done

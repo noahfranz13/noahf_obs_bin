@@ -1,0 +1,16 @@
+#! /bin/bash
+
+source=$1
+tmpfile=/tmp/tic_find.$$
+echo "finding sources:"
+find /mnt_bl*/datax*/collate /mnt_blc?0/datax*/dibas* -name "*_"$source"_*0001.fil" > $tmpfile
+for session in `awk -F/ '{print $5}' $tmpfile | sort | uniq`; do
+  firstfile=`grep /${session}/ $tmpfile | head -1`
+  search=`echo $firstfile | awk -Fguppi_ '{print $1}' | awk -F/spliced_ '{print $1}' | awk -F/blc '{print $1}'`
+  match=`echo $firstfile | awk -Fguppi_ '{print $2}'`
+  band=`/home/obs/bin/which_band $firstfile`
+  echo ==============================================================================
+  echo $source : $session : $band
+  ls -tr ${search}/*0001.fil | grep -A 5 $match
+done
+rm $tmpfile

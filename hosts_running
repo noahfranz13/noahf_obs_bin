@@ -1,0 +1,3 @@
+#! /bin/bash
+
+echo `redis-cli -h blh0 mget blc{0..7}{0..7}_observing | awk '/on/ {printf("blc%02o ",NR-1)}'`

@@ -1,0 +1,26 @@
+#! /bin/bash
+
+# where are things?
+
+sessionlist=/home/obs/triggers/session_list
+
+# okay then...
+
+if [[ "x$1" == "x" ]]; then
+  echo "please provide final directory, i.e. splice_manager /datax/collate"
+  echo "note: getting sessions to do from $sessionlist"
+  exit 0 
+fi
+
+for i in `grep -v '^#' $sessionlist | awk '{print $1}'`; do 
+  echo -n ====== STARTING SESSION $i ======
+  date
+  cd /tmp
+  cd /mnt_blc?0/datax*/dibas*/$i/GUPPI/*/
+  current=`pwd`
+  if [[ $current == "/tmp" ]]; then
+    echo "ERROR: cannot find this session $i"
+  else
+    /home/obs/bin/do_anyspec_collate . $1 |& tee -a anyspec_collate.out
+  fi
+done 

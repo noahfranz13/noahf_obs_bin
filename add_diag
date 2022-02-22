@@ -1,0 +1,11 @@
+#! /bin/bash
+
+#foreach i (`ls guppi*.raw | grep -vi DIAG`)
+#foreach i (`ls guppi_57826_6[3-4]*.raw | grep -vi DIAG`)
+#foreach i (`ls guppi*_KIC*.raw | grep -vi DIAG`)
+#foreach i (`ls /mnt_blc*/datax/dibas/*01/*/*/*3C*.raw | grep -vi DIAG`)
+for i in `ls /mnt_blc*/datax/dibas/AGBT20B_999_14/*/*/*00{10..19}.????.raw`; do
+  NEWNAME=`echo $i | sed -re 's/(guppi_[0-9][0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9]_)/\1DIAG_/'`
+  echo mv $i $NEWNAME
+  mv $i $NEWNAME
+done

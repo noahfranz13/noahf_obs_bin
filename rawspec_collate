@@ -1,0 +1,190 @@
+#! /bin/tcsh
+
+set OBSERVINGSTATUS = /home/obs/triggers/observation_status
+
+# set to 1 to delete original files
+# set DELETEORIGFILES = 0
+set DELETEORIGFILES = 1
+
+if (-f $OBSERVINGSTATUS) then
+  if (`cat $OBSERVINGSTATUS` == "off") then
+    set NOW = `date '+%s'`
+    set FILETIME = `/bin/ls -l --time-style="+%s" $OBSERVINGSTATUS | awk '{print $6}'`
+    set DELTA = `echo $NOW $FILETIME | awk '{print $1-$2}'`
+    if ($DELTA > 60) then # half hour safe enough?
+      echo "safe to run since we haven't been observing for 10 minutes..."
+    else
+      echo "observing stopped less than 10 minutes ago.. not safe yet...."
+      exit 0
+    endif
+  else
+    echo -n "not running because we are currently observing (or too soon after stopping)... "
+    date
+    exit 0
+  endif
+endif
+
+if (x == x$2) then
+  echo "rawspec_collate guppi_root_name collate_dir"
+  exit 1
+endif
+
+set INFILE = $1
+
+set TMPFILE = /tmp/rawspec_collate.tmp.$$
+
+# check for disk space:
+
+set SPACE = `df -P $2 | tail -1 | awk '{print $5}' | sed 's/%//'`
+if ($SPACE > 98) then
+  echo "WARNING: not enough space in $2 - exiting..."
+#  exit 1
+endif
+
+echo -n "starting: "
+date
+set START = `date '+%s'`
+
+cat /dev/null > $TMPFILE
+
+# foreach i (`find /datax /datax2 /datax3 /mnt_* -name 'blc*'$INFILE'*' -print | grep -v '.raw$' | grep -v 'spliced_'`) 
+foreach i (`find /mnt_blc* /mnt_bls*/datax*/dibas_data -name 'blc*'$INFILE'*' -print | grep -v '.raw$' | grep -v 'spliced_' | grep -v 'processing_hub' | grep -v 'dibas.[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].broken'`) 
+  echo "retrieving: $i"
+  echo $i >> $TMPFILE
+end
+
+cd $2
+
+set SESSIONID = "blank"
+foreach PATHELEMENT (`grep $INFILE $TMPFILE | grep .rawspec.0000.fil | head -1 | sed 's/\// /g'`)
+  # set COUNT = `echo $PATHELEMENT | grep -c AGBT`
+  set COUNT = `echo $PATHELEMENT | grep -c '[A,T]GBT[0-9][0-9][A,B]'`
+  if ($COUNT == 1) then
+    set SESSIONID = $PATHELEMENT
+  endif
+end
+if ($SESSIONID == "blank") then
+  echo "can't figure out session id - exiting..."
+  exit 2
+endif
+
+mkdir $SESSIONID >& /dev/null
+chmod 775 $SESSIONID
+chgrp bl $SESSIONID
+chmod g+s $SESSIONID
+cd $SESSIONID
+
+echo "getting splice order..."
+set ORDERTMP = /tmp/splice_order_collate.tmp.$$
+/home/obs/bin/splice_order $INFILE > $ORDERTMP
+set SPLERROR = `grep -ci "fatal error" $ORDERTMP`
+if ($SPLERROR == 1) then
+  cat $ORDERTMP
+  echo "exiting rawspec_collate because this is really bad..."
+  exit 0
+endif
+
+set THISORDER = ` cat $ORDERTMP | awk '{printf("%s ",$1)}'`
+set NODES = ""
+foreach NODE (`grep ${INFILE}.rawspec.0000.fil $TMPFILE | awk -F/ '{print $NF}' | sed 's/blc//' | sort -n | awk -F_ '{printf("%s\n",$1)}'`)
+  set FOUND = `grep -c '^'$NODE' ' $ORDERTMP`
+  set THISNODE = $NODE
+  if ($FOUND == 0) then
+    set THISNODE = `echo $NODE | sed 's/[0-9]/o/'` # set first digit to "o" if overlap
+  endif
+  set NODES = ${NODES}${THISNODE}
+end
+/bin/rm $ORDERTMP
+
+echo these nodes '('including overlaps')': $NODES
+echo actual order: $THISORDER
+
+# foreach i (.rawspec.0000.fil .rawspec.0001.fil .rawspec.0002.fil .rawspec.8.0001.fil)
+foreach i (.rawspec.0000.fil .rawspec.0001.fil .rawspec.0002.fil)
+  echo "splicing $i files : "
+  set THESEFILES = ""
+  foreach THISNODE ($THISORDER)
+    echo blc${THISNODE}.${INFILE}${i}
+    set NEXTFILE = `grep blc${THISNODE}_${INFILE}${i} $TMPFILE`
+    set THESEFILES = "$THESEFILES $NEXTFILE"
+  end
+  echo command: /usr/local/sigproc/bin/splice2 $THESEFILES -o spliced_blc${NODES}_${INFILE}${i}
+#  if (-f spliced_blc${NODES}_${INFILE}${i}) then
+#    echo "OUTPUT FILE ALREADY EXISTS - skipping..."
+#  else
+    /usr/local/sigproc/bin/splice2 $THESEFILES -o spliced_blc${NODES}_${INFILE}${i}
+#  endif
+  if (! -s spliced_blc${NODES}_${INFILE}${i}) then
+    echo "empty file created - deleting it..."
+    rm spliced_blc${NODES}_${INFILE}${i}
+  else 
+    set CSTMP = /tmp/check_splice.tmp.$$
+    /home/obs/bin/check_splice_sizes $THESEFILES spliced_blc${NODES}_${INFILE}${i} > $CSTMP
+    echo -n "check splice output: "
+    cat $CSTMP
+    set CHECKSPLICE = `cat $CSTMP | awk '{print $1}'`
+    /bin/rm $CSTMP
+    if ($CHECKSPLICE == "bad") then
+      echo "splice too small - deleting it..."
+      rm spliced_blc${NODES}_${INFILE}${i}
+    else
+      echo "(done)"
+    endif
+  endif
+end 
+
+set PULSAR = `echo $INFILE | grep -ci _PSR_`
+if ($PULSAR == 1) then 
+  echo "8-bitting the spliced pulsar prodcut..."
+  set TMPOUT = sum_fil.tmp.out.$$
+  set TMPIN = sum_fil.tmp.in.$$
+  set REALOUT = spliced_blc${NODES}_${INFILE}.rawspec.8.0001.fil
+  set REALIN = spliced_blc${NODES}_${INFILE}.rawspec.0001.fil
+  mv $REALIN $TMPIN
+  # orig command:
+  # /usr/local/sigproc/bin/sum_fil spliced_blc${NODES}_${INFILE}.rawspec.0001.fil -obits 8 -o spliced_blc${NODES}_${INFILE}.rawspec.8.0001.fil -qlen 10000
+  /usr/local/sigproc/bin/sum_fil $TMPIN -obits 8 -o $TMPOUT -qlen 10000
+  mv $TMPIN $REALIN
+  mv $TMPOUT $REALOUT
+
+  echo "pulsar - running prepfold on .8.0001.fil product:"
+  /home/obs/bin/prepfold_wrapper spliced_blc${NODES}_${INFILE}.rawspec.8.0001.fil
+endif
+
+set DELETE = 1
+foreach i (.rawspec.0000.fil .rawspec.0001.fil .rawspec.0002.fil)
+  if (! -s spliced_blc${NODES}_${INFILE}${i}) then
+    set DELETE = 0
+  endif
+end
+
+if ($DELETE == 0) then
+  echo "problems creating spliced files:"
+  ls -l spliced_blc${NODES}_${INFILE}${i}
+  echo "exiting without deleting originals..."
+  exit 1
+endif
+
+echo "final set of spliced files:"
+ls -l spliced_blc${NODES}_${INFILE}${i}
+echo "deleting originals:"
+foreach i (.rawspec.0000.fil .rawspec.0001.fil .rawspec.0002.fil)
+  set THESEFILES = ""
+  foreach FILE (`grep ${INFILE}${i} $TMPFILE`)
+    set THESEFILES = "$THESEFILES $FILE"
+  end
+  if ($DELETEORIGFILES == 1) then
+    echo /bin/rm $THESEFILES
+    /bin/rm $THESEFILES
+  else 
+    echo "DELETEORIGFILES is set to 0 - not deleting..."
+  endif
+end
+
+echo -n "ending: "
+date
+set END = `date '+%s'`
+set SECONDS = `echo $START $END | awk '{print $2-$1}'`
+echo "total: $SECONDS seconds"
+
+/bin/rm $TMPFILE

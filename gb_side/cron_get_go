@@ -1,0 +1,6 @@
+#! /bin/bash
+
+outfile="get_go.out."`date  "+%d-%m-%y"`
+/users/mlebofsk/get_go > /users/mlebofsk/get_go_logs/$outfile
+/users/mlebofsk/go_to_mysql /users/mlebofsk/get_go_logs/$outfile > /users/mlebofsk/get_go_logs/${outfile}.sql
+cat /users/mlebofsk/get_go_logs/${outfile}.sql | mysql --force -N -u obs -h 104.154.94.28 BLtargets

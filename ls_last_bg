@@ -1,0 +1,3 @@
+#! /bin/bash
+
+/home/obs/bin/all_nodes_bg -n 'ls -ltr /datax/dibas/AGBT1??_???_*/GUPPI/*/gupp*raw |& tail -1'

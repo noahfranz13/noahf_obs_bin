@@ -1,0 +1,136 @@
+#! /bin/csh
+
+set TMPFILE = /tmp/make_catalog.$$
+
+# foreach i (`find /data/ /datax /datax2 -name "blc*.raw" |& grep -v "permission denied"`)
+foreach i (`find /datax /datax2 /datax3 /mnt_blc?/data* -name "blc*.raw" |& grep -v "permission denied" | grep -v 'lost+found'`)
+
+  set SIZE = `ls -ltr $i | awk '{print $5}'`
+
+  head -c 6480 $i | fold -w 80 > $TMPFILE
+
+  set OBSERVER = `awk -F= '$1 == "OBSERVER" { print $2 }' $TMPFILE`
+  set FRONTEND = `awk -F= '$1 == "FRONTEND" { print $2 }' $TMPFILE`
+  set OBSFREQ =  `awk '$1 == "OBSFREQ" {print $3}' $TMPFILE | awk '{printf("%0.4f\n",$1)}'`
+  set SRC_NAME = `awk -F= '$1 == "SRC_NAME" { print $2 }' $TMPFILE`
+  set TRK_MODE = `awk -F= '$1 == "TRK_MODE" { print $2 }' $TMPFILE`
+  set RA =       `awk '$1 == "RA" {print $3}' $TMPFILE | awk '{printf("%0.4f\n",$1)}'`
+  set DEC =      `awk '$1 == "DEC" {print $3}' $TMPFILE | awk '{printf("%0.4f\n",$1)}'`
+  set LST =      `awk '$1 == "LST" {print $3}' $TMPFILE`
+  set AZ =       `awk '$1 == "AZ" {print $3}' $TMPFILE | awk '{printf("%0.4f\n",$1)}'`
+  set ZA =       `awk '$1 == "ZA" {print $3}' $TMPFILE | awk '{printf("%0.4f\n",$1)}'`
+  set DAQPULSE = `awk -F= '$1 == "DAQPULSE" { print $2 }' $TMPFILE`
+  set OBSBW =    `awk '$1 == "OBSBW" {print $3}' $TMPFILE`
+  set STT_IMJD = `awk -F= '$1 == "STT_IMJD" { print $2 }' $TMPFILE`
+  set STT_SMJD = `awk -F= '$1 == "STT_SMJD" { print $2 }' $TMPFILE`
+  set NETBUFST = `awk -F= '$1 == "NETBUFST" { print $2 }' $TMPFILE`
+  set NPKT =     `awk '$1 == "NPKT" {print $3}' $TMPFILE`
+  set NDROP =    `awk '$1 == "NDROP" {print $3}' $TMPFILE`
+
+  echo -n $i,
+  echo -n $SIZE,
+  echo -n $OBSERVER,
+  echo -n $FRONTEND,
+  echo -n $OBSFREQ,
+  echo -n $SRC_NAME,
+  echo -n $TRK_MODE,
+  echo -n $RA,
+  echo -n $DEC,
+  echo -n $LST,
+  echo -n $AZ,
+  echo -n $ZA,
+  echo -n $DAQPULSE,
+  echo -n $OBSBW,
+  echo -n $STT_IMJD,
+  echo -n $STT_SMJD,
+  echo -n $NETBUFST,
+  echo -n $NPKT,
+  echo $NDROP
+
+end
+
+/bin/rm -f $TMPFILE
+
+exit 0
+
+#### example header
+BACKEND = 'GUPPI   '                                                            
+TELESCOP= 'GBT     '                                                            
+OBSERVER= 'Dave MacMahon'                                                       
+PROJID  = 'AGBT16A_999_08'                                                      
+FRONTEND= 'Rcvr1_2 '                                                            
+NRCVR   =                    2                                                  
+FD_POLN = 'LIN     '                                                            
+OBSFREQ =              2156.25                                                  
+SRC_NAME= 'J2229+2643_OFF'                                                      
+TRK_MODE= 'TRACK   '                                                            
+RA_STR  = '22:29:50.9280'                                                       
+RA      =             337.4622                                                  
+DEC_STR = '+28:43:57.3600'                                                      
+DEC     =              28.7326                                                  
+LST     =                 3600                                                  
+AZ      =             264.0565                                                  
+ZA      =              32.3067                                                  
+BMAJ    =   0.1374147405860239                                                  
+BMIN    =   0.1374147405860239                                                  
+DAQPULSE= 'Fri Jan  1 18:35:08 2016'                                            
+DAQSTATE= 'running '                                                            
+NBITS   =                    8                                                  
+OFFSET0 =                  0.0                                                  
+OFFSET1 =                  0.0                                                  
+OFFSET2 =                  0.0                                                  
+OFFSET3 =                  0.0                                                  
+BANKNAM = 'BANKA   '                                                            
+TFOLD   =                    0                                                  
+DS_FREQ =                    1                                                  
+DS_TIME =                    1                                                  
+FFTLEN  =                32768                                                  
+CHAN_BW =            2.9296875                                                  
+NBIN    =                  256                                                  
+OBSNCHAN=                   64                                                  
+SCALE0  =                  1.0                                                  
+SCALE1  =                  1.0                                                  
+DATAHOST= '10.17.0.67'                                                          
+SCALE3  =                  1.0                                                  
+NPOL    =                    4                                                  
+POL_TYPE= 'AABBCRCI'                                                            
+BANKNUM =                    0                                                  
+DATAPORT=                60000                                                  
+ONLY_I  =                    0                                                  
+CAL_DCYC=                  0.5                                                  
+DIRECTIO=                    0                                                  
+BLOCSIZE=            132251648                                                  
+ACC_LEN =                    1                                                  
+CAL_MODE= 'OFF     '                                                            
+OVERLAP =                    0                                                  
+OBS_MODE= 'RAW     '                                                            
+CAL_FREQ= 'unspecified'                                                         
+DATADIR = '/datax/dibas'                                                        
+PFB_OVER=                   12                                                  
+SCANLEN =                300.0                                                  
+PARFILE = '/opt/dibas/etc/config/example.par'                                   
+OBSBW   =                187.5                                                  
+SCALE2  =                  1.0                                                  
+BINDHOST= 'eth4    '                                                            
+PKTFMT  = '1SFA    '                                                            
+TBIN    =    3.41333333333E-07                                                  
+BASE_BW =               1450.0                                                  
+CHAN_DM =                  0.0                                                  
+SCANNUM =                   17                                                  
+SCAN    =                   17                                                  
+NETSTAT = 'receiving'                                                           
+DISKSTAT= 'waiting '                                                            
+PKTIDX  =                    0                                                  
+DROPAVG =          2.02673e-06                                                  
+DROPTOT =             0.546533                                                  
+DROPBLK =                    0                                                  
+STT_IMJD=                57388                                                  
+STT_SMJD=                84909                                                  
+STTVALID=                    1                                                  
+NETBUFST= '1/24    '                                                            
+SCANREM =                300.0                                                  
+STT_OFFS=                    0                                                  
+PKTSIZE =                 8192                                                  
+NPKT    =                16143                                                  
+NDROP   =                    0                                                  
+END                                                                             

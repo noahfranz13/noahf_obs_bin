@@ -1,0 +1,143 @@
+#! /bin/csh
+
+# do_rawspec top_data_dir [hostname_override]
+
+# scan for all .raw files under top_data_dir and run rawspec on all possible data
+
+# if we aren't observing (as dictated by the contents of file $OBSERVINGSTATUS) and
+#    we aren't already running (as dictated by the existence of $HOSTRUNNING trigger file) then
+#    * fire off a rawspec loop on all potential raw data (basically ever observation that starts with *.0000.raw)
+#      * check to see if $TRIGGER exists (human may create it to stop all rawspecs) - if so, exit
+#      * run bl_fixup.rb on all the respective .raw files of this observation
+#      * run rawspec with parameters based on 2 or 8 bit data, and block size of raw data
+#      * run an 8-bitter on the pulsar product 
+#      * if no "DIAG" string found in the path, check file sized of .fil products - if sane, delete .raw files
+#
+
+##### PARKES/cuda-8.0
+setenv PATH /usr/local/cuda-8.0/bin:$PATH
+setenv LD_LIBRARY_PATH /usr/local/cuda-8.0/lib64:/usr/local/listen/lib
+
+set TRIGGER = /home/obs/triggers/stop_rawspec
+# set TRIGGER = /home/obs/triggers/stop_rawspec_NOT_REALLY # uncomment this is you want it to run whenever
+set SAH_HOSTS = /home/obs/triggers/sah_hosts
+set RAWQUANTEXE = /usr/local/listen/bin/raw_quant
+
+set OBSERVINGSTATUS = /home/obs/triggers/observation_status
+
+#set GPUSPECEXE = /usr/local/listen/bin/gpuspec
+set GPUSPECEXE = /usr/local/listen/bin/gpuspec2
+
+set RAWSPECEXE = /usr/local/bin/rawspec
+
+set TMPFILE = /tmp/rawspec.tmp.$$
+
+set TWOBITBLOCKSIZE = 33069312
+
+if (x == x$1) then
+  echo "which root directory?"
+  exit 1
+endif
+
+if (x == x$2) then
+  set HOSTNAME = `hostname`
+else 
+  set HOSTNAME = $2
+endif
+
+set ISCRON = "no"
+
+set THISDIR = `pwd`
+
+set HOSTRUNNING = /home/obs/triggers/rawspec_${HOSTNAME}_running
+
+# # check obs status
+
+#if (-f $OBSERVINGSTATUS) then
+#  if (`cat $OBSERVINGSTATUS` == "off") then 
+#    set NOW = `date '+%s'`
+#    set FILETIME = `/bin/ls -l --time-style="+%s" $OBSERVINGSTATUS | awk '{print $6}'`
+#    set DELTA = `echo $NOW $FILETIME | awk '{print $1-$2}'`
+#    if ($DELTA > 60) then # half hour safe enough?
+#      echo "safe to start since we haven't been observing for 30 minutes..."
+#    else 
+#      echo "stopped less than 30 minutes ago.. not safe yet...."
+#      exit 0
+#    endif
+#  else 
+#    echo -n "currently observing (and shortly after stopping)... "
+#    date
+#    exit 0
+#  endif
+#endif
+
+# check if host running 
+
+if (-f $HOSTRUNNING) then
+  # only report if not in a cron job (otherwise log will get noisy)
+  if ($ISCRON == "no") then 
+    echo "rawspec is already running on host $HOSTNAME - exiting..."
+    echo "remove triggerfile: $HOSTRUNNING if you feel this is bogus"
+    echo " "
+    echo "output of pgrep -fl rawspec:"
+    echo " "
+    pgrep -fl rawspec
+  endif
+  exit 1
+endif
+
+touch $HOSTRUNNING
+
+foreach i (`find $1 -name "*guppi*raw" -print | sed 's/.[0-9][0-9][0-9][0-9].raw//' | sort | uniq`)
+
+  if (-f $TRIGGER) then
+    echo "stopping because triggerfile: $TRIGGER exists..."
+    rm $HOSTRUNNING
+    exit 0
+  endif
+
+  cd $THISDIR
+
+  set BASENAME = `basename $i`
+  set DIRNAME = `dirname $i`
+
+  cd $DIRNAME
+
+  echo $i
+  echo =====================================================================
+
+  set START = `date '+%s'`
+  echo -n "starting: "
+  date
+
+  # is the a _999_ set? 1 = yes, 0 = no 
+  set ISBL = `/home/obs/bin/is_bl_session $i | grep -c yes`
+
+  set PRODUCTS = "-p 1 -f 8 -t 16 -o 3"
+  # set PRODUCTS = "-p 1 -f 32 -t 4 -o 3"
+
+  if (-f ${BASENAME}.rawspec.0003.fil && ! -z ${BASENAME}.rawspec.0003.fil) then
+    echo "0003.fil files exist - already reduced - skipping fixup/rawspec..."
+  else 
+
+    numactl --cpunodebind 1 $RAWSPECEXE $i $PRODUCTS -H
+
+    if ($status == 1) then
+      echo "error during rawspec..."
+      set GSERROR = 1
+    endif
+
+    echo -n "ending: "
+    date
+
+  endif # already rawspec'ed
+
+  set END = `date '+%s'`
+  set DIFF = `echo $START $END | awk '{print $2-$1}'`
+  echo number of total seconds: $DIFF
+  echo ====================================
+
+end
+
+# no more files - show's over - remove running trigger and exit
+rm $HOSTRUNNING

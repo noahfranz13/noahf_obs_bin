@@ -1,0 +1,22 @@
+#! /bin/csh
+
+if (x == x$1) then
+  echo "make_8_bit file"
+  echo "converts .gpuspec.0001.fil file into .gpuspec.8.0001.fil"
+  exit 0
+endif
+
+set OLDNAME = $1
+set NEWNAME = `echo $OLDNAME | sed 's/.gpuspec.0001.fil/.gpuspec.8.0001.fil/'`
+
+if (-f $NEWNAME) then
+  echo "$NEWNAME already exists - exiting..."
+  exit 0
+endif
+
+if ($OLDNAME == $NEWNAME) then
+  echo "name must end in .gpuspec.0001.fil"
+  exit 0
+endif
+
+/usr/local/sigproc/bin/sum_fil $OLDNAME -obits 8 -o $NEWNAME -qlen 10000

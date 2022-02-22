@@ -1,0 +1,3 @@
+#!/bin/bash
+
+clear; tail -n 10 ~/logs/convert*log | less

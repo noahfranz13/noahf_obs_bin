@@ -1,0 +1,148 @@
+#! /bin/csh
+
+set TRIGGER = /home/obs/triggers/stop_gpuspec
+
+set TMPFILE = /tmp/gpuspec.tmp.$$
+
+set TWOBITBLOCKSIZE = 33069312
+
+if (x == x$1) then
+  echo "which root directory?"
+  exit 1
+endif
+
+set THISDIR = `pwd`
+
+set HOSTNAME = `hostname`
+
+# foreach i (`find $1 -name "blc*_2bit_guppi*raw" -print | grep -v PSR | grep HIP | sed 's/.[0-9][0-9][0-9][0-9].raw//' | sort | uniq`)
+# foreach i (`find $1 -name "blc*guppi*raw" -print | egrep '(_W3|_W49|_HIP|_GJ|_PSR)' | sed 's/.[0-9][0-9][0-9][0-9].raw//' | sort | uniq`)
+# foreach i (`find $1 -name "*guppi*raw" -print | egrep '(_W3|_W49|_HIP|_GJ|_PSR)' | sed 's/.[0-9][0-9][0-9][0-9].raw//' | sort | uniq`)
+foreach i (`find $1 -name "*guppi*raw" -print | sed 's/.[0-9][0-9][0-9][0-9].raw//' | sort | uniq`)
+
+  if (-f $TRIGGER) then
+    echo "stopping because triggerfile: $TRIGGER exists..."
+    exit 0
+  endif
+
+  cd $THISDIR
+
+  set BASENAME = `basename $i`
+  set DIRNAME = `dirname $i`
+
+  cd $DIRNAME
+
+  echo $i
+  echo =====================================================================
+
+  set START = `date '+%s'`
+  echo -n "starting: "
+  date
+
+  set GSERROR = 0
+
+  set BITS = 8
+  set TWOBIT = `ls ${BASENAME}.[0-9][0-9][0-9][0-9].raw |& grep -c "_2bit"`
+  if ($TWOBIT > 0) then
+    set BITS = 2
+  endif
+  echo "setting bit depth to $BITS"
+
+  if (-f ${BASENAME}.gpuspec.0000.fil) then
+    echo ".fil files exist - already reduced - skipping fixup/gpuspec..."
+  else 
+
+    /usr/local/bin/bl_fixup.rb ${BASENAME}.[0-9][0-9][0-9][0-9].raw |& tee $TMPFILE
+    if ($status == 1) then
+      echo "error during fixup..."
+      foreach BADFILE (`awk '$3=="error" {print $1}' $TMPFILE`)
+        mv $BADFILE bad_${BADFILE}.corrupted_headers 
+      end
+    endif
+    
+#    /usr/local/listen/bin/gpuspec -i ${BASENAME}.[0-9][0-9][0-9][0-9].raw -b $BITS -B 2 -f 1033216,8,1024 -t 51,1009,3027 -o ${BASENAME}.gpuspec.
+    foreach p (0 1)
+      /home/siemion/sw/dev/gbt_seti/src/gpuspec -i ${BASENAME}.[0-9][0-9][0-9][0-9].raw -p $p -b $BITS -B 2 -f 1033216,8,1024 -t 51,128,3027 -o ${BASENAME}.gpuspec.${p}.
+    end 
+    if ($status == 1) then
+      echo "error during gpuspec..."
+      set GSERROR = 1
+    endif
+
+    echo -n "ending: "
+    date
+
+  endif # already gpuspec'ed
+
+  set BLOCKDIV = `echo $TWOBITBLOCKSIZE $BITS | awk '{printf("%d\n",($1/2)*$2)}'`
+
+  set NUMBLOCKS = `ls -l ${BASENAME}.[0-9][0-9][0-9][0-9].raw | awk '{ total += $5 }; END { printf("%d\n",(total/'$BLOCKDIV')) }' `
+  echo "number of guppi_daq blocks in file set: $NUMBLOCKS"
+
+  set EXPECTED0 = 2200000 
+  set EXPECTED1 = 120000  # 1009 
+  # set EXPECTED1 = 960000 # 128 should be this eventually once older gpuspeced data is cleared off
+  set EXPECTED2 = 42000 
+
+  set SIZE0 = `ls -l ${BASENAME}.gpuspec.0000.fil |& awk '{printf("%d\n", ($5 / '$EXPECTED0') )}'`
+  set SIZE1 = `ls -l ${BASENAME}.gpuspec.0001.fil |& awk '{printf("%d\n", ($5 / '$EXPECTED1') )}'`
+  set SIZE2 = `ls -l ${BASENAME}.gpuspec.0002.fil |& awk '{printf("%d\n", ($5 / '$EXPECTED2') )}'`
+
+  if ($SIZE0 == "No") then
+    set SIZE0 = 0
+  endif
+  if ($SIZE1 == "No") then
+    set SIZE1 = 0
+  endif
+  if ($SIZE2 == "No") then
+    set SIZE2 = 0
+  endif
+
+  echo "low estimation of bytes per block in .fil files: $EXPECTED0 $EXPECTED1 $EXPECTED2"
+  echo "approx num blocks in .fil files (divided by block size): $SIZE0 $SIZE1 $SIZE2" 
+  echo "actual .fil files:"
+  ls -l ${BASENAME}.gpuspec.000?.fil
+
+  if ( ($GSERROR == 0) && ($SIZE0 > $NUMBLOCKS) && ($SIZE1 > $NUMBLOCKS) && ($SIZE2 > $NUMBLOCKS) ) then
+    echo "creating 8 bit version of 0001 product using sim_fil:"
+    foreach p (0 1)
+      /usr/local/sigproc/bin/sum_fil ${BASENAME}.gpuspec.${p}.0001.fil -obits 8 -o ${BASENAME}.gpuspec.${p}.8.0001.fil -qlen 10000
+    end
+    # set CHECKNAME = `echo ${BASENAME} | grep -c '_DIAG_'`
+    set CHECKNAME = `echo ${i} | grep -c 'DIAG'`
+    if ($CHECKNAME == 0) then
+      #echo ".fil files are big enough - deleting the following .raw files:"
+      #ls -l ${BASENAME}.[0-9][0-9][0-9][0-9].raw |& tee ${BASENAME}.raw_files_deleted
+      # /bin/rm -f ${BASENAME}.[0-9][0-9][0-9][0-9].raw
+    else 
+      echo "DIAG source - not deleting!"
+    endif
+    set CHECKNAME = `echo ${BASENAME} | grep -c '^blc[0-9]'`
+    if ($CHECKNAME == 0) then
+      echo "renaming guppi_ files to add blcXY prefix:"
+      foreach j (`ls ${BASENAME}*`)
+        set NEWNAME = ${HOSTNAME}_$j
+        echo mv $j $NEWNAME
+        mv $j $NEWNAME
+      end
+    endif
+    # ALL DONE - create this file to let everybody know (note checkname still being used from above "blc" check)
+    if ($CHECKNAME == 0) then
+      touch ${HOSTNAME}_${BASENAME}.gpuspec.done
+    else
+      touch ${BASENAME}.gpuspec.done
+    endif
+  else
+    echo "not deleting/renaming .raw files due to error (.fil files are missing or not big enough)!"
+  endif
+
+  set END = `date '+%s'`
+  set DIFF = `echo $START $END | awk '{print $2-$1}'`
+  echo number of total seconds: $DIFF
+  echo ====================================
+
+end
+
+#-rw-r--r-- 1 root root  4232053161 Apr 17 16:51 blc3_2bit_guppi_57464_22697_HIP54966_OFF_0023.gpuspec.0000.fil
+#-rw-r--r-- 1 root root   218366377 Apr 17 16:51 blc3_2bit_guppi_57464_22697_HIP54966_OFF_0023.gpuspec.0001.fil
+#-rw-r--r-- 1 root root    72614313 Apr 17 16:51 blc3_2bit_guppi_57464_22697_HIP54966_OFF_0023.gpuspec.0002.fil

@@ -1,0 +1,19 @@
+#! /bin/csh
+
+if (x == x$1) then
+  echo 'which root directory?'
+  exit 1
+endif  
+
+foreach r (0)
+  foreach h (0 1 2 3 4 5 6 7)
+    echo -n blc$r$h :" "
+    ssh -o BatchMode=yes -o ConnectTimeout=1 blc$r$h 'find '$1' -name "*guppi*raw*"' > /tmp/check_rewrite.$$
+    set ALL = `grep -c guppi /tmp/check_rewrite.$$`
+    set REWRITE = `grep -c blc /tmp/check_rewrite.$$`
+    set DELTA = `echo $ALL $REWRITE | awk '{print $1-$2}'`
+    echo $REWRITE out of $ALL '('$DELTA')'
+  end
+end
+
+/bin/rm /tmp/check_rewrite.$$

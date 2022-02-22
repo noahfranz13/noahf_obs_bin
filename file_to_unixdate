@@ -1,0 +1,45 @@
+#! /usr/bin/env perl
+
+$lastfile = "/tmp/file_to_unixdate.last";
+
+$file = $ARGV[0];
+$tail = (split /guppi_/, $file)[1];
+($mjday,$ssm) = (split /_/, $tail)[0,1];
+$mjd = $mjday+($ssm/86400.0);
+$unix = int(($mjd - 40587.0) * 86400);
+# print "$mjday $ssm $mjd $unix\n";
+# print "$unix\n";
+
+if (-f $lastfile) {
+  $lastinfo = `cat $lastfile`;
+  chomp $lastinfo;
+  ($lastunix, $id, $start) = (split /\s+/, $lastinfo)[0,1,2];
+  }
+else { $lastunix = -1; }
+
+if ($lastunix != $unix) {
+
+  $output = `echo "select * from gb_observations where unix_timestamp(start) <= $unix and (unix_timestamp(start) + (length_hrs*3600)) >= $unix;" | mysql -N -u obs -h 104.154.94.28 BLtargets`;
+
+  chomp $output;
+  # print $output . "\n";
+  if ($output eq "") { $id = 0; $start = 0; }
+  else { ($id,$start) = (split /\s+/, $output)[0,1]; }
+
+  open (OUTFILE,">$lastfile");
+  print OUTFILE "$unix $id $start $lastunix\n";
+  close (OUTFILE);
+
+  if ($output eq "") { print "NONE\n"; exit (1); }
+
+  }
+
+if ($id == 0) { print "NONE\n"; exit (1); }
+else { print "$id\n"; }
+
+#($S, $M, $H, $d, $m, $Y) = gmtime($start);
+#$m += 1;
+#$Y += 1900;
+#$dirname = sprintf("PKS_%04d_%04d-%02d-%02dT%02d:%02d",$id, $Y,$m, $d, $H, $M);
+#
+#print "$dirname\n";

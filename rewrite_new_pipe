@@ -1,0 +1,80 @@
+#! /bin/csh 
+
+set TRIGGER = /home/obs/triggers/stop_rewrite
+set REWRITEEXE = /home/davidm/bl_rewrite.rb
+
+if (x == x$1) then
+  echo "REWRITEEXE root_dir - does a find starting at root_dir for files to be rewritten, then rewrites them"
+  exit 1
+endif
+
+set CURDIR = `pwd`
+
+foreach i (`find $1 -name "guppi*.raw" |& grep -v "permission denied" | grep -v 'lost+found' | grep -v '/blc'`)
+
+  if (-f $TRIGGER) then
+    echo "triggerfile $TRIGGER exists... exiting"
+    exit 0
+  endif
+  echo -n working on $i - 
+  echo `date`
+  if (-f ${i}.working) then
+    echo "   .working file exists - skipping!"
+  else 
+    touch ${i}.working
+    set DIRNAME = `dirname $i`
+    set BASENAME = `basename $i`
+    cd $DIRNAME
+    $REWRITEEXE $BASENAME - | /home/davidm/local/src/gbtseti/
+    if ($status == 0) then
+      echo " - success"
+    else
+      echo " - ERROR"
+    endif
+    cd $CURDIR
+    /bin/rm ${i}.working
+  endif
+
+end
+
+set TRIGGER = /home/obs/triggers/stop_8to2
+
+if (x == x$1) then
+  echo "8to2 root_dir - does a find starting at root_dir for files to be 2-bitted, then 2-bits them"
+  exit 1
+endif
+
+foreach i (`find $1 -name "blc*.raw" |& grep -v "permission denied" | grep -v 'lost+found' | grep -v '_2bit_' | grep -v '.2bit.raw$'`)
+
+  if (-f $TRIGGER) then
+    echo "triggerfile $TRIGGER exists... exiting"
+    exit 0
+  endif
+
+  set dirname = `dirname $i`
+  set basename = `basename $i`
+  set PULSAR = `echo $basename | egrep -c '(PSR|B1937)'`
+  # only 2-bit non-pulsars
+  if ($PULSAR == 0) then 
+    set thisnode = `echo $basename | awk -F_ '{print $1}'`
+    set newbasefilename = `echo $basename | sed 's/^'$thisnode'_/'$thisnode'_2bit_/'`
+    set newfilename = "$dirname/$newbasefilename"
+    echo -n working on $i - 
+    echo -n `date`
+    if (-f ${i}.working) then
+      echo "   .working file exists - skipping!"
+    else 
+      touch ${i}.working
+      /home/siemion/sw/gbt_seti/bin/raw_quant -i $i -o $newfilename >& /dev/null
+      # /home/siemion/sw/gbt_seti/bin/raw_quant -i $i -o /datax/$newbasefilename >& /dev/null
+      if ($status == 0) then
+        echo " - success - deleting."
+        /bin/rm  ${i}
+      else
+        echo " - ERROR"
+      endif
+      /bin/rm ${i}.working
+    endif
+  endif
+
+end

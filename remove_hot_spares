@@ -1,0 +1,6 @@
+#! /bin/bash
+
+for i in `/home/obs/bin/megasas_status | grep "Hotspare Information" | awk '{i=NF-2; printf("%s ",$i)}; END {printf("\n");}'`; do
+  echo $i
+  megacli -PDHSP -Rmv -PhysDrv $i -a0
+done

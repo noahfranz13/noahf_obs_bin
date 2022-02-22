@@ -1,0 +1,15 @@
+#! /bin/bash
+
+if [ $# -eq 0 ]; then
+  echo "which root directory? (ex: /datax/collate)"
+  exit 1
+fi
+
+for dir in `ls -d $1/*`; do 
+  echo DIRECTORY: $dir
+  cd $dir
+  for i in `find . -name "splice*spec.0001.fil" -print`; do
+    echo $i ========
+    /home/obs/bin/32to8fil $i
+  done
+done

@@ -1,0 +1,12 @@
+#! /bin/csh
+
+if (x == x$1) then
+  echo "which root directory?"
+  exit 1
+endif
+
+set BASENAME = `basename $1`
+# foreach h (10 11 13 14 15 16 17)
+foreach h (00 01 02 03 04 05 06 07 10 11 13 14 15 16 17)
+    sudo ssh  -o BatchMode=yes -o ConnectTimeout=1 blc$h '/home/obs/bin/special_gpuspec '$1' >& /home/obs/logs/special_gpuspec.out.blc'$h'.'${BASENAME}.$$ &
+end

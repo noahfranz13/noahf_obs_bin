@@ -1,0 +1,64 @@
+#! /usr/bin/env perl
+
+use File::Basename;
+
+$infile = $ARGV[0];
+if ($infile eq "" || $infile eq "-h" || $infile eq "--help") { 
+  print "splice_order base_target_name (i.e. guppi_57849_37640_HIP70230_0094)\n";
+  print "  finds all target_name.rawspec.0003.fil files (on all mounts)\n";
+  print "  and determines best order given overlaps\n";
+  }
+
+@allfiles = `find /mnt_blc* /mnt_bls*/datax*/dibas_data -name 'blc*'$infile'.rawspec.0003.fil' -print | grep -v 'spliced_'`;
+
+%seen = ();
+foreach $file (@allfiles) {
+  chomp $file;
+  # print "file: $file\n";
+  $basename = basename ($file);
+  ($node) = (split /_/, $basename)[0];
+  $node =~ s/blc//;
+  $dirname = dirname ($file);
+  $player = (split /\//, $dirname)[-1];
+  $player =~ s/BLP//;
+  $freq1 = `/usr/local/sigproc/bin/header $file | grep "Frequency of channel 1 (MHz)" | awk -F: '{print \$2}'`;
+  chomp $freq1;
+  $freqs{$node} = $freq1;
+  $players{$node} = $player;
+  $files{$node} = $file;
+  # print "-- $node $player $freq1\n";
+  }
+
+@uniqfreqs = grep { ! $seen{$_} ++ } (sort {$b <=> $a} values %freqs); 
+
+foreach $freq (sort keys %seen) {
+  if ($seen{$freq} > 2) {
+    print "fatal error: frequency $freq is seen more than 2 times (" . $seen{$freq} . ")\n";
+    exit (2);
+    }
+  }
+
+foreach $freq (@uniqfreqs) {
+  $low = -1; $high = -1;
+  foreach $node (sort keys %freqs) {
+    if ($freqs{$node} == $freq) { 
+      if ($high == -1) { $high = $node; }
+      else { $low = $node; }
+      }
+    }
+  if ($low == -1) { $usenode = $high; } # only one node matches this frequency, so use it!
+  else {
+    $diff = (abs(oct($players{$low}) - oct($players{$high})));
+    if ($diff == 1) { # the case where the overlap is one compute node, use the low one
+      $usenode = $low; # BUT DO WE _WANT_ THIS ONE?
+      } else {
+      # use the one furthest from the edge of the bank (as far as players go)
+      $lowdist = (oct($players{$low}) % 8); 
+      if ($lowdist > 3) { $lowdist = 7 - $lowdist; }
+      $highdist = (oct($players{$high}) % 8); 
+      if ($highdist > 3) { $highdist = 7 - $highdist; }
+      if ($lowdist > $highdist) { $usenode = $low; } else { $usenode = $high; }
+      }
+    }
+  print "$usenode $players{$usenode} $freq $files{$usenode}\n";
+  }

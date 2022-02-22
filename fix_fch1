@@ -1,0 +1,18 @@
+#!/usr/bin/env ruby
+
+#require 'filterbank'
+require '/home/davidm/local/src/rb-blgbt/lib/filterbank'
+
+f = Filterbank::File.open(ARGV[0], 'r+')
+new_fch1 = ARGV[1].to_f;
+
+f.read_header do |kw, val, pos|
+  case kw
+  when 'fch1'
+    puts "Changing fch1 from #{val} to #{new_fch1}"
+    f.seek(pos, IO::SEEK_SET)
+    f.write([new_fch1].pack('<d'))
+  end
+end
+
+f.close

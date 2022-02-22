@@ -1,0 +1,5 @@
+#! /bin/bash
+
+DEVICE=`mount | awk '$3=="/datax" {print $1}'`
+xfs_db -r $DEVICE -c frag
+

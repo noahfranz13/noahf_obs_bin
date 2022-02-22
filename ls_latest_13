@@ -1,0 +1,5 @@
+#! /bin/bash
+# actually finds the last 0012 or 0013 or 0014 file
+hosts="${@:-$(echo blc{0..0}{0..7})}"
+
+for h in $hosts; do ssh -x -o BatchMode=yes -o ConnectTimeout=1 $h 'ls -ltr /datax/dibas/AGBT1??_999_*/GUPPI/*/*001[234].raw | tail -1' ; done

@@ -1,0 +1,6 @@
+#!/bin/bash
+# Use this instead of mv to move large directories from disk to disk, to have fewer errors.
+# Example usage:
+#   rmv /datax2/pipeline/AGBT21A_996_22/blc26 /mnt_bls9/datax3/pipeline/AGBT21A_996_22/
+
+rsync --remove-source-files -av $*

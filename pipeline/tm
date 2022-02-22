@@ -1,0 +1,3 @@
+#!/bin/bash
+
+clear; tail -n 20 ~/logs/move*.log

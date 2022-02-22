@@ -1,0 +1,9 @@
+#! /bin/csh
+
+#foreach r (0 1 2 3)
+foreach r (3)
+  foreach h (0 1 2 3 4 5 6 7)
+      echo "starting on blc$r$h ..."
+      sudo ssh  -o BatchMode=yes -o ConnectTimeout=1 blc$r$h '/home/obs/bin/gpu_pol >& /home/obs/logs/do_gpu_pol.out.blc'$r$h'.'.$$ &
+  end  
+end

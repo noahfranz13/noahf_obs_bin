@@ -1,0 +1,10 @@
+#! /bin/csh
+
+# foreach i (`find $1 -name "guppi*raw" -print | grep -vi diag | sed 's/.[0-9][0-9][0-9][0-9].raw//' | sort | uniq`)
+foreach i (`find $1 -name "guppi*raw" -print | grep -vi diag | grep HIP | sed 's/.[0-9][0-9][0-9][0-9].raw//' | sort | uniq`) # HIP only
+  echo $i
+  foreach j (`ls ${i}*gpuspec*`)
+    echo "deleting: $j"
+    /bin/rm $j
+  end
+end

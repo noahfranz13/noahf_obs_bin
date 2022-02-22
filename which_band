@@ -1,0 +1,30 @@
+#! /bin/csh
+
+# Frequency of channel 1 (MHz)     : 2251.463413238525391
+
+foreach FILE ($argv)
+  set FREQ = `/home/obs/bin/header_wrapper $FILE |& grep "Frequency of channel 1" | awk '{print $NF}' | awk -F'.' '{print $1}'`
+  echo -n "$FREQ "
+  if ( x$FREQ == x) then
+    echo "- $FILE"
+    exit 0
+  endif
+  if ($FREQ < 2400) then
+    echo -n "L"
+  else 
+    if ($FREQ < 3600) then
+      echo -n "S"
+    else
+      if ($FREQ < 8600) then
+        echo -n "C"
+      else
+        if ($FREQ < 12500) then 
+          echo -n "X"
+        else
+          echo -n "K" 
+        endif
+      endif
+    endif
+  endif
+  echo " $FILE"
+end

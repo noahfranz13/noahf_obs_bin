@@ -1,0 +1,97 @@
+#!/usr/bin/env python
+# S. Croft 2020/10/16
+
+import os
+import time
+import slacker
+import redis
+import re
+#import ast
+
+test_mode = False # never post to slack if True
+
+post_to_slack = False
+
+# connect to redis DB
+r = redis.StrictRedis(host='localhost', port=6379, db=0)
+
+# check if we are observing
+def observing():
+    awe = os.popen('/home/obs/bin/are_we_observing').read()
+    if awe.rstrip() == 'yes':
+        obs = True
+    else:
+        obs = False
+    return(obs)
+
+def redis_connect():
+    r = redis.StrictRedis(host='localhost', port=6379, db=0, decode_responses = True)
+    return(r)
+
+def bot_msg(msg_str):
+    output = {'text': msg_str}
+    output['username'] = "Breakthrough Bot"
+    output['icon_emoji'] = ':robot_face:'
+    output['as_user'] = False
+    return output
+
+def slack_msg(slack_chan,message):
+    print ("slacking message: %s " % message)
+    with open(os.getenv('HOME')+"/.slack_api_tester.token") as f:
+        token = f.read()
+        slack = slacker.Slacker(token)
+        slack.chat.post_message(slack_chan,**bot_msg("%s" % message))
+
+def get_tsys():
+    # get all Tsys measurements from the most recent semester
+    tsys_all = r.hgetall(sorted(r.keys('OREO_TSYS*'))[-1])
+    tsys_time = sorted(tsys_all.keys())[-1]
+    tsys_last = tsys_all[tsys_time]
+    m = re.match(".*receiver..(.+),.*freq.*forecast..(.+),..measured...(.+),(.+)].*",str(tsys_last))
+    rcvr = m.group(1)
+    tsys_last_fcst = float(m.group(2))
+    tsys_last_meas1 = float(m.group(3))
+    tsys_last_meas2 =float( m.group(4))
+    return(tsys_time,rcvr,tsys_last_fcst,tsys_last_meas1,tsys_last_meas2)
+
+def tsys_too_high(rcvr,tsys):
+    # red line at 2x nominal Tsys from GBT observer's guide Table 2.2
+    limits = {"Rcvr1_2" : 40, "Rcvr2_3" : 44, "Rcvr4_6" : 36,
+              "Rcvr8_10" : 54, "RcvrArray18_26" : 75}
+    try:
+        limit = limits[rcvr]
+    except:
+        return False
+    if tsys > limit:
+        return True
+    else:
+        return False
+
+(tsys_time,rcvr,fcst,meas1,meas2) = get_tsys()
+# compare Tsys from both pols and take the lowest
+tsys_best_meas = min(meas1,meas2)
+
+if observing():
+#    message = "We are currently observing."
+    message = "The last Tsys measurement was "+str(meas1)+","+str(meas2)+" with "+rcvr+" at "+tsys_time+"."
+    if (tsys_too_high(rcvr, tsys_best_meas) & (rcvr != "Rcvr1_2")): # we don't change down if we are at L-band
+        message += " Please change to a lower frequency receiver!"
+        post_to_slack = True
+    else:
+        message += " Tsys OK."
+else:
+    message = "We are not currently observing."
+
+
+now = time.time()
+        
+slack_chan = '#active_observations'
+#slack_chan = '#gbt_observations'
+
+if test_mode:
+    post_to_slack = False
+
+if post_to_slack:
+    slack_msg(slack_chan,message)
+else:
+    print(message)

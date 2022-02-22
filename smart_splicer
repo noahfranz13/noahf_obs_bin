@@ -1,0 +1,79 @@
+#! /bin/bash
+
+# smart_splicer = wrapper around anyspec_collate to smartly pick files to splice
+# smart_splicer collate_dir (i.e. /datax/collate)
+
+# list of all sessions to work on eventually:
+sessionfile=/home/obs/triggers/sessions_to_splice
+
+# list of sessions that are complete (or completed to the best of our ability):
+donefile=/home/obs/triggers/sessions_to_splice.complete
+
+outputdir=$1
+if [ -z $outputdir ]; then
+  echo "smart_splicer collate_dir (i.e /datax/collate)";
+  exit 1
+fi
+
+# check space in outputdir
+
+space=`df -P $outputdir | tail -1 | awk '{print $5}' | sed 's/%//'`
+if [[ $space > 98 ]]; then
+  echo "WARNING: not enough space in $outputdir partition  - exiting..."
+  exit 1
+fi
+
+# any viable sessions with unspliced filterbank scans in them?
+# if you do encounter a session without any, add that session to the $donefile
+dothissession=""
+for session in `cat $sessionfile`; do
+  isdone=`grep -xc $session $donefile`
+  if [[ $isdone == 0 ]]; then 
+    echo "checking session: $session"
+    sessiondir=`ls /mnt_blc?0/datax*/dibas*/$session`;
+    cd $sessiondir/GUPPI/*
+    filcount=`ls blc*0000.fil |& grep -vi "no such file or directory" | wc -l`;
+    if [[ $filcount > 0 ]]; then
+      $dothissession=$session;
+      break;
+    else # no filterbanks to do? add it to the donefile!
+      echo "   - $session has no viable .fil files - adding to: $donefile"
+      echo $session >> $donefile
+    fi
+  fi
+done
+
+if [ -z $dothissession ]; then
+  echo "WARNING: no sessions to split"
+  exit 1
+fi
+
+# NOTE: should still be in correct directory given search above
+
+echo "selected session: $session"
+
+tryfil=`ls blc*0000.fil | head -1 | awk -Fguppi_ '{printf("guppi_%s",$2)}' | awk -F.gpuspec '{print $1}' | awk -F.rawspec '{print $1}'`
+
+if [ -z $tryfil ]; then
+  echo "WARNING: should never get here - somehow couldn't find filterbank to splice in this session"
+  exit 1
+fi
+
+echo "selected scan: $tryfil"
+
+tmpoutput=/tmp/${scan}.tmp.$$
+
+/home/obs/bin/anyspec_collate $tryfil $outputdir |& tee $tmpoutput
+
+problems=`grep -c "problems creating spliced files" $tmpoutput`
+rm $tmpoutput
+
+if [[ $problems > 0 ]]; then
+  echo "ERROR: problems during splice of $session / $ $tryfil"
+  echo 'prepending files with "splice_error"...'
+  for i in `ls blc*${tryfil}*fil`; do 
+    j="splice_error_$i"
+    mv -v $i $j
+  done
+  exit 1
+fi

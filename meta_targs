@@ -1,0 +1,10 @@
+#! /bin/csh
+
+set CWD = `pwd`
+foreach DIR (`find . -name "AGBT*" -print`)
+  echo $DIR
+  echo =============================
+  cd $CWD/$DIR/*/*
+  /home/obs/bin/target_ra_dec
+  echo =============================
+end

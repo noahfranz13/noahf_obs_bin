@@ -1,0 +1,21 @@
+#! /bin/csh
+
+set TRIGGER = /home/obs/triggers/stop_gpuspec
+
+cd $1
+while (1)
+foreach i (`ls -1 *.0000.raw | sed s/.0000.raw//`)
+
+  if (-f $TRIGGER) then
+    echo "stopping because triggerfile: $TRIGGER exists..."
+    rm $HOSTRUNNING
+    exit 0
+  endif
+
+  echo $i
+  echo ==============================================
+  /usr/local/listen/bin/gpuspec -i ${i}*.raw -b 8 -B 2 -f 1048576,8,1024 -t 51,128,3072 -o ${i}.gpuspec.test.
+  echo ==============================================
+  /bin/rm ${i}.gpuspec.test.*.fil
+end
+end

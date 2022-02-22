@@ -1,0 +1,16 @@
+#! /bin/bash
+
+ipmitool='/usr/bin/ipmitool -I lanplus -U ADMIN -P ADMIN -H'
+
+echo =========================
+sensors | grep Physical
+
+echo bls0
+echo =========================
+$ipmitool bls0x sensor | grep CPU
+
+for h in blc{0..7}; do
+  echo $h
+  echo =========================
+  $ipmitool ${h}x sensor | grep CPU
+done

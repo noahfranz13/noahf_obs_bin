@@ -1,0 +1,14 @@
+#! /bin/csh
+
+if (x == x$1) then
+  echo "which root directory?"
+  exit 1
+endif
+
+foreach i (`find $1 -name "blc10_*" -print`)
+
+  set NEWNAME = `echo $i | sed 's/blc10_/blc02_/'`
+  echo mv $i $NEWNAME
+  mv $i $NEWNAME
+
+end

@@ -1,0 +1,11 @@
+#! /bin/bash
+
+HOSTNAME=`hostname`
+ACTIVE=`grep -c $HOSTNAME /home/obs/triggers/hosts_running`
+
+if [ $ACTIVE == 1 ] ; then
+  MOSTRECENT=`ls -trd /datax/dibas/?GBT1??_999_* | tail -1 `
+  MOSTRECENTSIZE=`du -skh $MOSTRECENT | awk '{print $1}'`
+  MOSTRECENTCOUNT=`ls $MOSTRECENT/GUPPI/*/*.0000.raw |& grep -v "No such file" | wc -l | awk '{print $1}'`
+  echo $MOSTRECENT $MOSTRECENTSIZE $MOSTRECENTCOUNT | awk '{printf("%22s %8s %8s\n",$1,$2,$3)}'
+fi

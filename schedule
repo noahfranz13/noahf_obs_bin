@@ -1,0 +1,3 @@
+#! /bin/bash
+
+wget -qO- --no-check-certificate https://dss.gb.nrao.edu/schedule/public | egrep '(undisplayed|[0-9][0-9]:[0-9][0-9] - [0-9][0-9]:[0-9][0-9]|^ +<td><a href=)' | awk -F'>' '{print $2}' | sed 's/<\/t[dh]//' | sed 's/<a href="\/project\///' | sed 's/"//' | awk '$2=="(ET)" {date = $1} $2=="-" { time = $0 } ($2 != "(ET)" && $2 != "-") {printf("%20s %20s %20s\n",date,time,$0)}' | awk -Ftitle= '{print $1}' | grep "$1"

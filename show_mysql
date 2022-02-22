@@ -1,0 +1,4 @@
+#! /bin/csh
+
+echo "select * from status;" | mysql -h gbtdata.gbt.nrao.edu -u gbtstatus --password=w3bqu3ry -E gbt_status
+

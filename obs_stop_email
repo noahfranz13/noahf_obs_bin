@@ -1,0 +1,36 @@
+#! /bin/bash
+
+TMPFILE=/tmp/obs_stop.$$
+
+cat /dev/null > $TMPFILE
+
+echo '<html><pre>' >> $TMPFILE
+
+echo -n "GB observations stopping: " >> $TMPFILE
+date >> $TMPFILE
+echo " " >> $TMPFILE
+
+echo DATA DIRS: >> $TMPFILE
+echo server: last written data directory --- size -- num targets >> $TMPFILE
+echo =========================================================== >> $TMPFILE
+/home/obs/bin/all_nodes_bg -n /home/obs/bin/obs_most_recent | awk 'NF>2' >> $TMPFILE
+echo " " >> $TMPFILE
+
+echo DATAX DISKS: >> $TMPFILE
+echo ==================== >> $TMPFILE
+/home/obs/bin/all_df_bg /datax | column -c 120 >> $TMPFILE
+echo " "   >> $TMPFILE
+
+
+echo OBSERVATION/CADENCE/EFFICIENCY REPORT: >> $TMPFILE
+echo ==================== >> $TMPFILE
+/home/obs/bin/obs_cadences_report >> $TMPFILE
+
+echo '</pre></html>' >> $TMPFILE
+  
+# mail -s "GB observations stopping" lebofsky@berkeley.edu siemion@berkeley.edu hisaacson@berkeley.edu < $TMPFILE
+# mail -s "GB observations stopping" lebofsky@berkeley.edu < $TMPFILE
+# mail -s "$(echo -e "GB observations stopping\nContent-Type: text/html")" lebofsky@berkeley.edu < $TMPFILE
+mail -s "$(echo -e "GB observations stopping\nContent-Type: text/html")" lebofsky@berkeley.edu siemion@berkeley.edu hisaacson@berkeley.edu davidm@berkeley.edu < $TMPFILE
+cat $TMPFILE >> /home/obs/obs_reports/obs_report.`date '+%F-%T'`
+/bin/rm $TMPFILE

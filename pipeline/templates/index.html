@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>pitchfork</title>
+  </head>
+  <body>
+    <h2>pitchfork</h2>
+    <pre>
+      We have candidate events for {{cfpairs|length}} cadence-frequency pairs.
+
+      TODO: organize these by session or most-recently-generated or something
+      {% for cadence, freq in cfpairs %}
+      <a href="/events/{{cadence}}/{{freq}}">cadence {{cadence}}, approximate frequency {{freq}}</a>
+      {% endfor %}
+    </pre>
+  </body>
+</html>

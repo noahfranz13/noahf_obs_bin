@@ -1,0 +1,6 @@
+#! /bin/bash
+
+count=`/home/obs/bin/all_nodes_bg_with_storage "netstat -rn | grep 208.68" |& grep -c 208.68`
+if [[ $count == 0 ]]; then
+  /home/obs/bin/all_nodes_bg_with_storage "route add -net 208.68.240.0 netmask 255.255.255.0 gw 10.17.2.1" >& /dev/null
+fi

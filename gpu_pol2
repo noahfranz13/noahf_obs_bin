@@ -1,0 +1,10 @@
+#! /bin/bash
+
+source /usr/local/pulsar64/pulsar.bash
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
+
+cd /datax/dibas/AGBT17A_999_56/GUPPI/*
+
+for i in 0 1; do 
+  numactl --cpunodebind 1 ~siemion/sw/dev/gbt_seti/src/gpuspec2 -i `hostname`_guppi_57872_20242_DIAG_2MASS_1502+2250_0024.*.raw -p $i -b 8 -B 2 -f 1024 -t 3072 -o `hostname`_guppi_57872_20242_DIAG_2MASS_1502+2250_0024.p${i}.gpuspec.
+done

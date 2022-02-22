@@ -1,0 +1,30 @@
+#! /bin/csh
+
+if (x == x$1) then
+  echo "fil_process spliced.fil:"
+  echo "  takes spliced filterbank and:"
+  echo "  1. updated headers based on ancillary fits"
+  echo "  2. converts pulsar product to 8-bit int (if applicable)"
+  echo "  3. pads with zeros (if applicable)"
+endif
+
+set INFILE = $1
+set SPLICED = `echo $INFILE | grep -c '^spliced'`
+if ($SPLICED == 0) then
+  echo "this does not look like a spliced filterbank file.. exiting.."
+  exit 0
+endif
+
+### ancillary fits part
+
+### 8-bit int part
+
+set OUTFILE = `echo $INFILE | sed 's/.gpuspec.0001.fil$/.gpuspec.8.0001.fil/'`
+if ($INFILE == $OUTFILE) then
+  echo "file is not 32-bit float pulsar product - skipping 8-bit int conversion"
+else
+  echo "file is 32-bit float pulsar product - running 32to8fil on it...""  
+  /home/obs/bin/32to8fil $1
+endif
+
+### pad with zeros part

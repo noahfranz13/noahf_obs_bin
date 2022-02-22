@@ -1,0 +1,26 @@
+#! /bin/bash
+
+# is_bl_session SESSION_NAME (like AGBT20B_999_123)
+# will respond "yes" or "no" depending on whether or not this is a BL session
+#
+# known BL sessions: {16..20}{A,B}_999 20B_996 {21..25}{A,B}_996
+
+yes=0
+if [[ "x$1" == "x" ]]; then
+  echo "is_bl_session SESSION_NAME (like AGBT20B_999_123)"
+  echo "  will respond "yes" or "no" depending on whether or not this is a BL session"
+  exit 0;
+fi
+
+# the heavy lifting re: all known valid cases is in the next line below 
+for i in AGBT{16..20}{A,B}_999 AGBT21A_996 AGBT21B_999 AGBT{22..30}{A,B}_999 ; do # good until 2030!
+  if [[ `echo $1 | grep -c $i` == 1 ]]; then
+    yes=1
+  fi
+done
+
+if [[ $yes == 1 ]]; then
+  echo yes
+else
+  echo no
+fi

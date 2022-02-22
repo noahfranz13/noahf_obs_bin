@@ -1,0 +1,5 @@
+#! /usr/bin/env php
+<?php
+# sample argument format: 2018-10-17 14:20:19
+echo strtotime("$argv[1] $argv[2]");
+?>

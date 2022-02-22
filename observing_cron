@@ -1,0 +1,7 @@
+#! /bin/bash
+
+areweobserving=`/home/obs/bin/are_we_observing`
+redis-cli set are_we_observing $areweobserving > /dev/null 2>&1
+
+# for testing
+redis-cli set gb_time `date "+%s"` > /dev/null 2>&1

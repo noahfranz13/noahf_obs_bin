@@ -1,0 +1,13 @@
+#! /bin/bash
+
+for i in blc{0..7}{0..7} ; do
+  TOTAL=""
+  if [ $# -gt 1 ]; then
+    TOTAL="--total"
+  fi
+  if [ $# -eq 0 ]; then
+    ssh -o BatchMode=yes -o ConnectTimeout=1 $i "df -h /datax | tail -n +2" | awk '{printf("'$i' - %s\n",$0)}'
+  else
+    ssh -o BatchMode=yes -o ConnectTimeout=1 $i "df -h $TOTAL $@ | tail -n +2" | awk '{printf("'$i' - %s\n",$0)}'
+  fi
+done

@@ -1,0 +1,21 @@
+#! /bin/csh
+
+if (x == x$1) then
+  echo "gpuspec_pulsar_product guppi_base_name"
+  echo "will create gpuspec.8.0001.fil product and gpuspec.0002.fil products only"
+  exit 0
+endif
+
+set GPUSPECEXE = /usr/local/listen/bin/gpuspec2
+
+set START = `date '+%s'`
+numactl --cpunodebind 1 $GPUSPECEXE -i ${1}*.raw -b 8 -B 2 -f 8,1024 -t 128,3072 -o ${1}.gpuspec.
+set END = `date '+%s'`
+set DIFF = `echo $START $END | awk '{print $2-$1}'`
+echo gpuspec number of total seconds: $DIFF
+
+mv ${1}.gpuspec.0001.fil `hostname`_${1}.gpuspec.0002.fil
+mv ${1}.gpuspec.0000.fil `hostname`_${1}.gpuspec.0001.fil
+
+# should do 8-bit conversion *after* splicing 
+# /home/obs/bin/32to8fil `hostname`_${1}.gpuspec.0001.fil

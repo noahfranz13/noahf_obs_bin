@@ -1,0 +1,4 @@
+*.pyc
+*~
+to_remove_from_git_scrutiny/
+old/

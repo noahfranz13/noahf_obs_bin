@@ -1,0 +1,9 @@
+#! /bin/csh
+
+if (x == x$1) then
+  echo "guppi_find SEARCH_STRING"
+  echo "  - finds all files on all systems containing SEARCH_STRING"
+  echo '  - SEARCH_STRING must start with "guppi_"'
+endif
+
+find /mnt_bl*/datax* -name '*'$1'*' -print

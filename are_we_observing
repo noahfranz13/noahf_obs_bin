@@ -1,0 +1,37 @@
+#! /usr/bin/env perl
+
+$unix = time();
+
+$output = `echo "select * from gb_observations where unix_timestamp(start) <= $unix and (unix_timestamp(start) + (length_hrs*3600)) >= $unix;" | mysql -N -u obs -h 104.154.94.28 BLtargets`;
+
+chomp $output;
+# print $output . "\n";
+# if ($output eq "" && ! -f "/home/obs/triggers/stop_gpuspec") { 
+if ($output eq "") { 
+  print "no\n"; 
+  if ($ARGV[0] ne "") { 
+    $output = `echo "select min(unix_timestamp(start)) from gb_observations where unix_timestamp(start) > $unix;" | mysql -N -u obs -h 104.154.94.28 BLtargets`;
+    chomp $output;
+    if ($output eq "" || $output eq "NULL") { print "no future observations scheduled yet!\n"; }
+    else {
+      $delta = $output - $unix;
+      print $delta . " seconds before next observation (" . $delta/3600 . " hours) ";
+      $loutput = `echo "select length_hrs from gb_observations where unix_timestamp(start) = $output;" | mysql -N -u obs -h 104.154.94.28 BLtargets`;
+      chomp $loutput;
+      print "which is $loutput hours long\n";
+      }
+    }
+  } 
+else { 
+  print "yes\n"; 
+  if ($ARGV[0] ne "") {
+    $output = `echo "select unix_timestamp(start) from gb_observations where unix_timestamp(start) <= $unix and (unix_timestamp(start) + 600 + (length_hrs*3600)) >= $unix;" | mysql -N -u obs -h 104.154.94.28 BLtargets`;
+    chomp $output;
+    $delta = $unix - $output;
+    print $delta . " seconds in (" . $delta/3600 . " hours)\n";
+    $loutput = `echo "select length_hrs from gb_observations where unix_timestamp(start) <= $unix and (unix_timestamp(start) + 600 + (length_hrs*3600)) >= $unix;" | mysql -N -u obs -h 104.154.94.28 BLtargets`;
+    chomp $loutput;
+    $delta = ($output + ($loutput*3600)) - $unix;
+    print $delta . " seconds left to go (" . $delta/3600 . " hours)\n";
+    }
+  }

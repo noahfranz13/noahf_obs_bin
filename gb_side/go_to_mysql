@@ -1,0 +1,33 @@
+#! /bin/perl
+
+open (INFILE, $ARGV[0]) or die "cannot open file $ARGV[0] for reading";
+while  (<INFILE>) {
+  chomp;
+  ($session,$target,$date,$receiver,$skyfreq,$restfreq) = split /\s+/, $_;
+  #($session,$target,$date,$receiver,$radeg,$dec,$az,$el,$skyfreq,$restfreq) = split /\s+/, $_;
+  ($observer) = (split /'/, $_)[1];
+  ($restofstring) = (split /'/, $_)[2];
+  $restofstring =~ s/^\s//;
+  ($radeg,$dec,$az,$el) = split /\s+/, $restofstring;
+  $rahrs=$radeg/15;
+  if ($az eq "") { next; }
+  $targetid = `echo "select id from new_targets where name = '"$target"';" | mysql -N -u obs -h 104.154.94.28 BLtargets`;
+  chomp $targetid; 
+  if ($targetid eq "" or $targetid == 0) { $targetid = "NULL" }
+  # print $_ . "\n";
+  print "insert into go_scans (session, target_name, utc_observed, receiver, ra_hrs, dec_deg, azimuth, elevation, skyfreq, restfreq, observer, target_id) values (";
+  print "'" . $session . "', ";
+  print "'" . $target . "', ";
+  print "'" . $date . "', ";
+  print "'" . $receiver. "', ";
+  print "$rahrs, ";
+  print "$dec, ";
+  print "$az, ";
+  print "$el, ";
+  print "$skyfreq, ";
+  print "$restfreq, ";
+  print "'" . $observer. "', ";
+  print "$targetid);\n";
+  }
+
+#AGBT20A_999_01 1419+5423 2020-02-06T08:23:19 Rcvr8_10 9000000000.0 9000000000.0 'Vishal Gajjar' 214.9443892633955 54.3872776346395 403.7960883058548 62.661494081832885

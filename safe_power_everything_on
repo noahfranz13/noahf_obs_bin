@@ -1,0 +1,21 @@
+#! /bin/bash
+
+# power each node in each rack individually, sleeping 15 seconds between each
+for rack in {0..7}; do
+  for node in {0..7}; do
+    echo ipmitool -I lanplus -U ADMIN -P StormArea51 -H blc${rack}${node}x power on
+    /usr/bin/ipmitool -I lanplus -U ADMIN -P StormArea51 -H blc${rack}${node}x power on
+    sleep 15
+  done
+done
+
+# power up the storage nodes, 15 second sleep between each
+for node in {0..9}; do
+  echo ipmitool -I lanplus -U ADMIN -P StormArea51 -H bl1s${node}x power on
+  /usr/bin/ipmitool -I lanplus -U ADMIN -P StormArea51 -H bls${node}x power on
+  sleep 15
+done
+
+# any others?
+echo ipmitool -I lanplus -U ADMIN -P StormArea51 -H blc18x power on
+/usr/bin/ipmitool -I lanplus -U ADMIN -P StormArea51 -H blc18x power on

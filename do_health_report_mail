@@ -1,0 +1,14 @@
+#! /bin/bash
+
+# in order to prevent mail showing up as attachment:
+#setenv LANG en_US.UTF-8
+#setenv LC_CTYPE en_US.UTF-8
+#setenv LC_ALL en_US.UTF-8
+
+TMPFILE=/tmp/health_report.$$
+/home/obs/bin/health_report_mail >& $TMPFILE
+
+# mail -s "Daily BL health report from GB" mattl@ssl.berkeley.edu siemion@berkeley.edu davidm@berkeley.edu dwoody@nrao.edu < $TMPFILE
+# mail -s "Daily BL health report from GB" lebofsky@berkeley.edu < $TMPFILE
+mail -s "$(echo -e "Daily BL health report from GB\nContent-Type: text/html")" lebofsky@berkeley.edu davidm@berkeley.edu siemion@berkeley.edu < $TMPFILE
+/bin/rm $TMPFILE

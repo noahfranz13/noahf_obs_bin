@@ -1,0 +1,3 @@
+#! /bin/bash
+
+ls -d /mnt_bl*/datax*/collate/$1

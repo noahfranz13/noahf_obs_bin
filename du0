@@ -1,0 +1,4 @@
+#!/bin/bash
+
+echo du -ach --max-depth=0 $*
+du -ach --max-depth=0 $*

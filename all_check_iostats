@@ -1,0 +1,16 @@
+#! /bin/bash
+
+tmpfile=/tmp/iostats.$$
+
+for h in blc{0..7}{0..7}; do 
+  ssh -o BatchMode=yes -o ConnectTimeout=1 $h 'iostat -xk 2 2 | grep "^sd" | tail -2' > ${tmpfile}.$h 2>&1 &
+done
+
+sleep 5
+   
+for h in blc{0..7}{0..7}; do 
+    echo $h
+    echo =========================
+    cat ${tmpfile}.$h
+#    /bin/rm ${tmpfile}.$h
+done

@@ -1,0 +1,19 @@
+#! /bin/csh
+
+if (x == x$1) then
+  echo 'gpuspec_check_done [data_dir]' 
+  echo '  - check to see if there is any raw non-diag data underneath data_dir'
+  echo '  - and report "yes" or "no"'
+  exit 0
+endif
+
+set COUNT = `find $1 -name "*.raw" -print |& grep -cvi "diag"`
+if ($COUNT == 0) then
+  echo "yes"
+  exit 0
+else
+  echo "no - $COUNT non-diag raw files exist:"
+  find $1 -name "*.raw" -ls |& grep -vi "diag"
+  exit 1
+endif
+

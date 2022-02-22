@@ -1,0 +1,160 @@
+TND:		sendGroupText AllUsers  04:50:29  gbtops {Hey Ellie, I got some vegas faults that im unfamilar with. Does the data coming through look okay? }
+
+JSON 4 slack: {"username": "gbtops", "text": "Hey Ellie, I got some vegas faults that im unfamilar with. Does the data coming through look okay?  \r\n", "icon_emoji": ":gbt:", "as_user": false}
+TEXT: 		"Hey Ellie, I got some vegas faults that im unfamilar with. Does the data coming through look okay?  \r\n"
+
+TND:		sendGroupText AllUsers  04:51:38  ewhite {thanks for letting me know! The data looks ok to me so far}
+
+JSON 4 slack: {"username": "ewhite", "text": "thanks for letting me know! The data looks ok to me so far \r\n", "icon_emoji": ":bust_in_silhouette:", "as_user": false}
+TEXT: 		"thanks for letting me know! The data looks ok to me so far \r\n"
+
+TND:		sendGroupText AllUsers  04:52:13  gbtops {Sounds good, as long as your happy with the data, im happy. }
+
+JSON 4 slack: {"username": "gbtops", "text": "Sounds good, as long as your happy with the data, im happy.  \r\n", "icon_emoji": ":gbt:", "as_user": false}
+TEXT: 		"Sounds good, as long as your happy with the data, im happy.  \r\n"
+
+TND:		sendGroupText AllUsers  04:53:25  gbtops {The faults im getting are "Player BLP06: DAG ready, DAQ previously failed", and "Player BLP06: NETSTAT is showing blockeP" }
+
+JSON 4 slack: {"username": "gbtops", "text": "The faults im getting are \"Player BLP06: DAG ready, DAQ previously failed\", and \"Player BLP06: NETSTAT is showing blockeP\"  \r\n", "icon_emoji": ":gbt:", "as_user": false}
+TEXT: 		"The faults im getting are \"Player BLP06: DAG ready, DAQ previously failed\", and \"Player BLP06: NETSTAT is showing blockeP\"  \r\n"
+
+TND:		sendGroupText AllUsers  04:53:42  gbtops {Just for future references should something come up. }
+
+JSON 4 slack: {"username": "gbtops", "text": "Just for future references should something come up.  \r\n", "icon_emoji": ":gbt:", "as_user": false}
+TEXT: 		"Just for future references should something come up.  \r\n"
+
+TND:		sendGroupText AllUsers  04:55:04  ewhite {Hmm... well now it actually looks like some nodes are dropping out; let's see if they're still out after the next scan starts, if so we might need to do something about it}
+
+JSON 4 slack: {"username": "ewhite", "text": "Hmm... well now it actually looks like some nodes are dropping out; let's see if they're still out after the next scan starts, if so we might need to do something about it \r\n", "icon_emoji": ":bust_in_silhouette:", "as_user": false}
+TEXT: 		"Hmm... well now it actually looks like some nodes are dropping out; let's see if they're still out after the next scan starts, if so we might need to do something about it \r\n"
+
+TND:		sendGroupText AllUsers  04:55:27  ewhite {thanks for the info about the fault, that is good to know}
+
+JSON 4 slack: {"username": "ewhite", "text": "thanks for the info about the fault, that is good to know \r\n", "icon_emoji": ":bust_in_silhouette:", "as_user": false}
+TEXT: 		"thanks for the info about the fault, that is good to know \r\n"
+
+TND:		sendGroupText AllUsers  04:56:01  gbtops {ah I see blc03 looks unhappy. }
+
+JSON 4 slack: {"username": "gbtops", "text": "ah I see blc03 looks unhappy.  \r\n", "icon_emoji": ":gbt:", "as_user": false}
+TEXT: 		"ah I see blc03 looks unhappy.  \r\n"
+
+TND:		sendGroupText AllUsers  04:56:17  gbtops {Oh and the band pass as well. odd. }
+
+JSON 4 slack: {"username": "gbtops", "text": "Oh and the band pass as well. odd.  \r\n", "icon_emoji": ":gbt:", "as_user": false}
+TEXT: 		"Oh and the band pass as well. odd.  \r\n"
+
+TND:		sendGroupText AllUsers  04:56:25  gbtops {Rob mentioned its been happening all day. }
+
+JSON 4 slack: {"username": "gbtops", "text": "Rob mentioned its been happening all day.  \r\n", "icon_emoji": ":gbt:", "as_user": false}
+TEXT: 		"Rob mentioned its been happening all day.  \r\n"
+
+TND:		sendGroupText AllUsers  04:57:51  ewhite {Yes, it has been happening on and off since the beginning of the session. The last few times though it has been dropping off for 1 - 1.5 scans then coming back online. Let's see if it comes back up when the next scan starts, if not we'll try some troubleshooting, if that sounds good}
+
+JSON 4 slack: {"username": "ewhite", "text": "Yes, it has been happening on and off since the beginning of the session. The last few times though it has been dropping off for 1 - 1.5 scans then coming back online. Let's see if it comes back up when the next scan starts, if not we'll try some troubleshooting, if that sounds good \r\n", "icon_emoji": ":bust_in_silhouette:", "as_user": false}
+TEXT: 		"Yes, it has been happening on and off since the beginning of the session. The last few times though it has been dropping off for 1 - 1.5 scans then coming back online. Let's see if it comes back up when the next scan starts, if not we'll try some troubleshooting, if that sounds good \r\n"
+
+TND:		sendGroupText AllUsers  04:58:42  gbtops {Will do! }
+
+JSON 4 slack: {"username": "gbtops", "text": "Will do!  \r\n", "icon_emoji": ":gbt:", "as_user": false}
+TEXT: 		"Will do!  \r\n"
+
+TND:		sendGroupText AllUsers  04:58:55  ewhite {thanks Aaron!}
+
+JSON 4 slack: {"username": "ewhite", "text": "thanks Aaron! \r\n", "icon_emoji": ":bust_in_silhouette:", "as_user": false}
+TEXT: 		"thanks Aaron! \r\n"
+
+TND:		sendGroupText AllUsers  05:03:04  ewhite {things are looking better on my end (in the grafana and bandpass plots), how about for you?}
+
+JSON 4 slack: {"username": "ewhite", "text": "things are looking better on my end (in the grafana and bandpass plots), how about for you? \r\n", "icon_emoji": ":bust_in_silhouette:", "as_user": false}
+TEXT: 		"things are looking better on my end (in the grafana and bandpass plots), how about for you? \r\n"
+
+TND:		sendGroupText AllUsers  05:03:53  gbtops {Same, those faults are still there but dont seem to be effecting anything.}
+
+JSON 4 slack: {"username": "gbtops", "text": "Same, those faults are still there but dont seem to be effecting anything. \r\n", "icon_emoji": ":gbt:", "as_user": false}
+TEXT: 		"Same, those faults are still there but dont seem to be effecting anything. \r\n"
+
+TND:		sendGroupText AllUsers  05:05:48  ewhite {Ok good! I'll keep an eye on the next few scans just in case :)}
+
+JSON 4 slack: {"username": "ewhite", "text": "Ok good! I'll keep an eye on the next few scans just in case :) \r\n", "icon_emoji": ":bust_in_silhouette:", "as_user": false}
+TEXT: 		"Ok good! I'll keep an eye on the next few scans just in case :) \r\n"
+
+TND:		sendGroupText AllUsers  05:06:26  gbtops {Sounds good, ill do the same :)}
+
+JSON 4 slack: {"username": "gbtops", "text": "Sounds good, ill do the same :) \r\n", "icon_emoji": ":gbt:", "as_user": false}
+TEXT: 		"Sounds good, ill do the same :) \r\n"
+
+TND:		sendGroupText AllUsers  05:25:15  ewhite {Since things are looking ok for now, I think I'm going to turn in if that's all right. Feel free to give me a call if anything comes up!}
+
+JSON 4 slack: {"username": "ewhite", "text": "Since things are looking ok for now, I think I'm going to turn in if that's all right. Feel free to give me a call if anything comes up! \r\n", "icon_emoji": ":bust_in_silhouette:", "as_user": false}
+TEXT: 		"Since things are looking ok for now, I think I'm going to turn in if that's all right. Feel free to give me a call if anything comes up! \r\n"
+
+TND:		sendGroupText AllUsers  05:25:44  gbtops {Sounds good, ill hold the fort! Have a nice night! }
+
+JSON 4 slack: {"username": "gbtops", "text": "Sounds good, ill hold the fort! Have a nice night!  \r\n", "icon_emoji": ":gbt:", "as_user": false}
+TEXT: 		"Sounds good, ill hold the fort! Have a nice night!  \r\n"
+
+TND:		sendGroupText AllUsers  05:25:53  ewhite {thank you so much, you too!}
+
+JSON 4 slack: {"username": "ewhite", "text": "thank you so much, you too! \r\n", "icon_emoji": ":bust_in_silhouette:", "as_user": false}
+TEXT: 		"thank you so much, you too! \r\n"
+
+TND:		sendGroupText AllUsers  09:50:10  akarunak {Hi, Ananthan here for 21A-389 using L-band and I'm on titania}
+
+JSON 4 slack: {"username": "akarunak", "text": "Hi, Ananthan here for 21A-389 using L-band and I'm on titania \r\n", "icon_emoji": ":bust_in_silhouette:", "as_user": false}
+TEXT: 		"Hi, Ananthan here for 21A-389 using L-band and I'm on titania \r\n"
+
+TND:		sendGroupText AllUsers  09:56:54  gbtops {Hello Ananthan, Aaron here! Set up shouldnt take long, ill let you know when to start. }
+
+JSON 4 slack: {"username": "gbtops", "text": "Hello Ananthan, Aaron here! Set up shouldnt take long, ill let you know when to start.  \r\n", "icon_emoji": ":gbt:", "as_user": false}
+TEXT: 		"Hello Ananthan, Aaron here! Set up shouldnt take long, ill let you know when to start.  \r\n"
+
+TND:		sendGroupText AllUsers  09:57:13  akarunak {Hey Aaron! Sounds great, thanks!}
+
+JSON 4 slack: {"username": "akarunak", "text": "Hey Aaron! Sounds great, thanks! \r\n", "icon_emoji": ":bust_in_silhouette:", "as_user": false}
+TEXT: 		"Hey Aaron! Sounds great, thanks! \r\n"
+
+TND:		sendGroupText AllUsers  10:02:24  gbtops {Alright you have control and may start when ready. }
+
+JSON 4 slack: {"username": "gbtops", "text": "Alright you have control and may start when ready.  \r\n", "icon_emoji": ":gbt:", "as_user": false}
+TEXT: 		"Alright you have control and may start when ready.  \r\n"
+
+TND:		sendGroupText AllUsers  10:02:31  akarunak Thanks!
+
+JSON 4 slack: {"username": "akarunak", "text": "Thanks!\r\n", "icon_emoji": ":bust_in_silhouette:", "as_user": false}
+TEXT: 		"Thanks!\r\n"
+
+TND:		sendGroupText AllUsers  10:02:43  gbtops {Happy to help! }
+
+JSON 4 slack: {"username": "gbtops", "text": "Happy to help!  \r\n", "icon_emoji": ":gbt:", "as_user": false}
+TEXT: 		"Happy to help!  \r\n"
+
+TND:		sendGroupText AllUsers  10:04:20  ewhite {thanks again Aaron! Have a nice day!}
+
+JSON 4 slack: {"username": "ewhite", "text": "thanks again Aaron! Have a nice day! \r\n", "icon_emoji": ":bust_in_silhouette:", "as_user": false}
+TEXT: 		"thanks again Aaron! Have a nice day! \r\n"
+
+TND:		sendGroupText AllUsers  10:04:28  gbtops {You too!}
+
+JSON 4 slack: {"username": "gbtops", "text": "You too! \r\n", "icon_emoji": ":gbt:", "as_user": false}
+TEXT: 		"You too! \r\n"
+
+TND:		sendGroupText AllUsers  10:10:29  gbtops {Hey Anathan, im gonna restart a manager on HPC-8 to clear some faults. it shouldnt effect your scans, but this is just a heads up incase it does. }
+
+JSON 4 slack: {"username": "gbtops", "text": "Hey Anathan, im gonna restart a manager on HPC-8 to clear some faults. it shouldnt effect your scans, but this is just a heads up incase it does.  \r\n", "icon_emoji": ":gbt:", "as_user": false}
+TEXT: 		"Hey Anathan, im gonna restart a manager on HPC-8 to clear some faults. it shouldnt effect your scans, but this is just a heads up incase it does.  \r\n"
+
+TND:		sendGroupText AllUsers  10:11:08  akarunak Okay!
+
+JSON 4 slack: {"username": "akarunak", "text": "Okay!\r\n", "icon_emoji": ":bust_in_silhouette:", "as_user": false}
+TEXT: 		"Okay!\r\n"
+
+TND:		sendGroupText AllUsers  10:11:18  gbtops {All done :) }
+
+JSON 4 slack: {"username": "gbtops", "text": "All done :)  \r\n", "icon_emoji": ":gbt:", "as_user": false}
+TEXT: 		"All done :)  \r\n"
+
+TND:		sendGroupText AllUsers  10:11:34  akarunak {Oh great!}
+
+JSON 4 slack: {"username": "akarunak", "text": "Oh great! \r\n", "icon_emoji": ":bust_in_silhouette:", "as_user": false}
+TEXT: 		"Oh great! \r\n"
+

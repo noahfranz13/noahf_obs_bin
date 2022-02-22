@@ -1,0 +1,23 @@
+#! /bin/bash
+
+# echo "turned off temporarily (talk to matt)"
+# exit 0
+
+topdir=$1
+shift
+hosts="${@:-$(echo blc{0..3}{0..7})}"
+
+if [ "$topdir" == "" -o "$topdir" == "-h" -o "$topdir" == "--help" ]; then
+  echo "which root directory?"
+  echo " "
+  echo "usage: do_all_gpuspec_special  root_directory [hosts]"
+  echo '   hosts defaults to: blc{0..3}{0..7}'
+  exit 1
+fi
+
+basename=`basename $topdir`
+
+for host in $hosts; do
+  echo starting gpuspec_special on ${host}:$topdir
+  sudo ssh  -o BatchMode=yes -o ConnectTimeout=1 $host '/home/obs/bin/do_gpuspec_special '$topdir' >& /home/obs/logs/do_gpuspec_special.out.blc'$host'.'${basename}.$$ &
+done

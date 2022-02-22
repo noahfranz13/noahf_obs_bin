@@ -1,0 +1,31 @@
+#! /bin/csh
+
+set TRIGGER = /home/obs/triggers/stop_gpuspec
+
+if (x == x$1) then
+  echo "which root directory?"
+  exit 1
+endif
+
+foreach i (`find $1 -name "blc*_2bit_guppi*raw" -print | grep -v PSR | grep HIP | sed 's/.[0-9][0-9][0-9][0-9].raw//' | sort | uniq`)
+
+    echo $i
+    set SIZE0 = `ls -l ${i}.gpuspec.0000.fil | awk '{print $5}'`
+    set SIZE1 = `ls -l ${i}.gpuspec.0001.fil | awk '{print $5}'`
+    set SIZE2 = `ls -l ${i}.gpuspec.0002.fil | awk '{print $5}'`
+
+    if ( ($SIZE0 > 4000000000) && ($SIZE1 > 200000000) && ($SIZE2 > 70000000) ) then
+      echo ".fil files are big enough - deleting the following .raw files:"
+      ls -l ${i}.[0-9][0-9][0-9][0-9].raw |& tee ${i}.raw_files_deleted
+      /bin/rm -f ${i}.[0-9][0-9][0-9][0-9].raw
+    else 
+      echo ".fil files are missing or not big enough!"
+    endif
+
+  endif # if gpuspec not already done
+
+end
+
+#-rw-r--r-- 1 root root  4232053161 Apr 17 16:51 blc3_2bit_guppi_57464_22697_HIP54966_OFF_0023.gpuspec.0000.fil
+#-rw-r--r-- 1 root root   218366377 Apr 17 16:51 blc3_2bit_guppi_57464_22697_HIP54966_OFF_0023.gpuspec.0001.fil
+#-rw-r--r-- 1 root root    72614313 Apr 17 16:51 blc3_2bit_guppi_57464_22697_HIP54966_OFF_0023.gpuspec.0002.fil

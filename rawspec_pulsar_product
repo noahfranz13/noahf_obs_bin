@@ -1,0 +1,24 @@
+#! /bin/csh
+
+if (x == x$1) then
+  echo "rawspec_pulsar_product guppi_base_name"
+  echo "will create gpuspec.0001.fil product and gpuspec.0002.fil products only"
+  exit 0
+endif
+
+set RAWSPECEXE = /usr/local/bin/rawspec
+
+set START = `date '+%s'`
+numactl --cpunodebind 1 $RAWSPECEXE ${1} -f 8,1024 -t 128,3072
+
+set END = `date '+%s'`
+set DIFF = `echo $START $END | awk '{print $2-$1}'`
+echo rawspec number of total seconds: $DIFF
+
+mv ${1}.rawspec.0001.fil `hostname`_${1}.rawspec.0002.fil
+mv ${1}.rawspec.0000.fil `hostname`_${1}.rawspec.0001.fil
+
+# set now as "pulsar_reduction_ts" per host
+now=`date -u "+%Y%m%dT%H%M%SZ"`
+host=`hostname`
+/usr/bin/redis-cli -h redishost hset pulsar_reduction_ts $host $now

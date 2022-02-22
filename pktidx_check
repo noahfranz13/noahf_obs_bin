@@ -1,0 +1,16 @@
+#! /bin/csh 
+
+# argument should be a .gpuspec..headers file
+
+# get just "stem"
+set STEM = `echo $1 | sed s/.gpuspec..headers//`
+
+set START = `fold -w 80 $1 | grep PKTIDX | head -1 | awk '{print $3}'`
+set END   = `fold -w 80 $1 | grep PKTIDX | tail -1 | awk '{print $3}'`
+set DELTA = `echo $START $END | awk '{print $2-$1}'`
+set BLOCKS = `/home/obs/bin/count_blocks ${STEM}*`
+
+echo $1 : $START $END '( '$DELTA' ) ' $BLOCKS
+
+
+

@@ -1,0 +1,26 @@
+#! /bin/bash
+
+public=`hostname | grep -c blp`
+if [ $public -eq 1 ]; then
+  echo "dc"
+  exit 0
+fi
+
+hostname=`hostname`
+if [ $hostname = "blh0" ]; then
+  ip=`ifconfig eth0 | grep "inet addr" | awk -F: '{print $2}' | awk '{print $1}'`
+else
+  ip=`ssh blh0 "ifconfig eth0" | grep "inet addr" | awk -F: '{print $2}' | awk '{print $1}'`
+fi
+
+case "$ip" in
+    130.155.181.233) echo "parkes"
+      ;;
+    10.16.98.99) echo "gbt"
+      ;;
+    10.11.0.153) echo "digilab"
+      ;;
+    ?) echo "unknown"
+      ;;
+esac
+

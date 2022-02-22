@@ -1,0 +1,10 @@
+#! /bin/csh
+
+set REDISHOST = 104.197.168.175
+set REDISPORT = 6379
+set REDISEXE = "redis-cli -h $REDISHOST -p $REDISPORT"
+
+# set observation status of green bank
+set STATUS = `cat /home/obs/triggers/observation_status`
+$REDISEXE set GBOBSSTATUS $STATUS
+

@@ -1,0 +1,3 @@
+#! /bin/bash
+# actually finds the lasst 0012 file
+for h in blc1{0..7}; do ssh -x -o BatchMode=yes -o ConnectTimeout=1 $h 'ls -ltr /datax/dibas/AGBT1??_999_*/GUPPI/*/*0012.raw | tail -1' ; done

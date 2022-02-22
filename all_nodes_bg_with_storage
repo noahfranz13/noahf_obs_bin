@@ -1,0 +1,48 @@
+#! /bin/bash
+
+newline=0
+preline=0
+if [ "x$1" == "x-n" ]; then
+  newline=1
+  shift
+fi
+if [ "x$1" == "x-p" ]; then
+  preline=1
+  shift
+fi
+
+TMPFILE=/tmp/all_nodes.$$
+
+hosts=`echo bls{0..9} blc{0..7}{0..7} blc18`
+for i in $hosts; do
+   # if [ $newline -eq 1 ]; then
+   #   echo -n $i" : "
+   # else
+   #   echo $i =========================
+   # fi 
+   ssh -o BatchMode=yes -o ConnectTimeout=1 $i "$1" >& $TMPFILE.$i &
+done
+
+for job in `jobs -p`
+do
+    wait $job
+done
+
+for i in $hosts; do
+   if [ $newline -eq 1 ]; then
+     echo $i | awk '{printf("%-6s : ",$1)}'
+   else
+     echo $i =========================
+   fi
+   lines=`wc -l $TMPFILE.$i | awk '{print $1}'`
+   if [ $lines -gt 0 ]; then
+     if [ $preline -eq 1 ]; then
+       awk '{printf("'$i' %s\n",$0)}' $TMPFILE.$i
+     else
+       cat $TMPFILE.$i
+     fi
+   else
+     echo " "
+   fi
+   /bin/rm $TMPFILE.$i
+done

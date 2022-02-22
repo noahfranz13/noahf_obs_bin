@@ -1,0 +1,51 @@
+#! /bin/bash
+
+triggerfile=/home/obs/triggers/stop_autosplice
+
+session=$1
+hopper=$2
+
+
+if [ "x" == "x$hopper" ] ; then
+  echo "autosplice session_id hopper_directory"
+  echo "  example: autosplice AGBT15A_999_123 /datax3/hopper"
+  exit 1
+fi
+
+cd /mnt_blc?0/datax*/dibas*/$session 2>/dev/null || { echo "The session $session cannot be found"; exit 1; }
+cd */* 2> /dev/null || { echo "Cannot descend into session $session BLPxx subdirectory - are there multiple player?"; exit 1; }
+
+echo -n "in directory: "
+pwd
+
+for i in `ls -1 *spec.done *.0000.fil | awk -F/ '{print $NF}' | sed 's/blc[0-9]_//' | sed 's/blc[0-9][0-9]_//' | sed 's/.rawspec.done//' | sed 's/.gpuspec.done//' | sed 's/.rawspec.0000.fil//' | sed 's/.gpuspec.0000.fil//' | sort | uniq -c | awk '$1==2 {print $2}'`)
+
+  if [ -f "$triggerfile" ]; then
+    echo -n "$triggerfile exists - exiting... "
+    date
+    exit 1
+  fi
+
+  hopperspace=`df -B 1G $hopper | tail -1 | awk '{print $4}'
+  if (( hopperspace < 500 )); then
+    echo "not enough space in $hopper - exiting... "
+    date
+    exit 1
+  fi
+
+  echo "$hopperspace GB available in $hopper"
+  echo -n $i" - starting : "
+  areweobserving=`/home/obs/bin/are_we_observing`
+  while [ $areweobserving == "yes" ] ; do
+    echo -n "currently observing, sleeping 600 seconds... "
+    date
+    sleep 600
+    areweobserving=`/home/obs/bin/are_we_observing`
+  done
+  date
+  /home/obs/bin/anyspec_collate $i $hopper
+  echo -n "finished $i : "
+  date
+  echo ===============================================
+
+end

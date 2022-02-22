@@ -1,0 +1,5 @@
+#! /bin/bash
+
+xfs_db -c frag -r `df /datax | awk '{print $1}' | tail -1`
+
+

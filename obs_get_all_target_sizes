@@ -1,0 +1,4 @@
+#! /bin/bash
+
+/home/obs/bin/all_nodes_bg "/home/obs/bin/obs_get_target_size $1" | grep -v '^blc' | grep -v ====== | awk '{printf("%s ",$1)}'
+echo " "

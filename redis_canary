@@ -1,0 +1,14 @@
+#! /bin/bash
+
+# puts the most recent canary added to /home/obs/target_logs/PULSARS into redis
+
+pulsarlog=/home/obs/target_logs/PULSARS
+
+lastupdatesecs=`stat -c %Y $pulsarlog`
+lastupdatedate=`date --date='@'$lastupdatesecs -u "+%Y%m%dT%H%M%SZ"`
+/usr/bin/redis-cli -h redishost hset pulsar_detection ts $lastupdatedate
+
+status=`tail -1 $pulsarlog | awk -F, '{print $8}'`
+snr_expected=`tail -1 $pulsarlog | awk -F, '{print $6}'`
+snr_actual=`tail -1 $pulsarlog | awk -F, '{print $7}'`
+/usr/bin/redis-cli -h redishost hmset pulsar_detection status "$status" snr_expected $snr_expected snr_actual $snr_actual

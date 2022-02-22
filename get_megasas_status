@@ -1,0 +1,4 @@
+#! /bin/bash
+
+outfile=/home/obs/logs/megasas_status.out.`date "+%Y-%m-%d"`
+/home/obs/bin/all_nodes_bg_with_storage -p /home/obs/bin/megasas_status >& $outfile

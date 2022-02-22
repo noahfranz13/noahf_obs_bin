@@ -1,0 +1,17 @@
+#! /bin/csh
+
+if (x == x$2) then
+  echo "fil_info guppi_root_name suffix"
+  echo "suffix is either: 0000.fil 0001.fil 0002.fil"
+  exit 1
+endif
+
+set INFILE = $1
+set SUFFIX = $2
+
+foreach i (`find /mnt_* -name '*'$INFILE'*'$SUFFIX -print |& grep -vi permission`) 
+  echo $i
+  echo ==========================================================================
+  /home/mattl/git/filterbank/filterbank.py -i $i
+  echo ==========================================================================
+end

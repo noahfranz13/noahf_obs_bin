@@ -1,0 +1,6 @@
+#! /bin/bash
+
+sleep 1800;
+/bin/rm -f /home/obs/triggers/stop_8to2 /home/obs/triggers/stop_rewrite
+/home/obs/bin/do_all_rewrite /datax &
+/home/obs/bin/do_all_8to2 /data &

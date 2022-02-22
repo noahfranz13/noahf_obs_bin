@@ -1,0 +1,93 @@
+#! /bin/csh
+
+if (x == x$2) then
+  echo "gpuspec_collate guppi_root_name collate_dir"
+  exit 1
+endif
+
+set INFILE = $1
+
+set TMPFILE = /tmp/gpuspec_collate.tmp.$$
+
+echo -n "starting: "
+date
+set START = `date '+%s'`
+
+cat /dev/null > $TMPFILE
+
+foreach i (`find /datax /datax2 /datax3 /mnt_* -name 'blc*'$INFILE'*' -print | grep -v '.raw$' | grep -v 'spliced_'`) 
+  echo "retrieving: $i"
+  echo $i >> $TMPFILE
+end
+
+cd $2
+
+set SESSIONID = "blank"
+foreach PATHELEMENT (`grep $INFILE $TMPFILE | grep .gpuspec.0000.fil | head -1 | sed 's/\// /g'`)
+  set COUNT = `echo $PATHELEMENT | grep AGBT | grep -c 999`
+  if ($COUNT == 1) then
+    set SESSIONID = $PATHELEMENT
+  endif
+end
+if ($SESSIONID == "blank") then
+  echo "can't figure out session id - exiting..."
+  exit 2
+endif
+
+mkdir $SESSIONID >& /dev/null
+cd $SESSIONID
+
+set NODES = `grep $INFILE $TMPFILE | grep .gpuspec.0000.fil | awk -F/ '{print $NF}' | sed 's/blc//' | awk -F_ '{printf("%s",$1)}'`
+
+# foreach i (.gpuspec.0000.fil .gpuspec.0001.fil .gpuspec.0002.fil .gpuspec.8.0001.fil)
+foreach i (.gpuspec.0000.fil .gpuspec.0001.fil .gpuspec.0002.fil)
+  echo -n "splicing $i files : "
+  set THESEFILES = ""
+  foreach FILE (`grep ${INFILE}${i} $TMPFILE`)
+    set THESEFILES = "$THESEFILES $FILE"
+  end
+  echo command: /usr/local/sigproc/bin/splice2 $THESEFILES -o spliced_blc${NODES}_${INFILE}${i}
+  /usr/local/sigproc/bin/splice2 $THESEFILES -o spliced_blc${NODES}_${INFILE}${i}
+  if (! -s spliced_blc${NODES}_${INFILE}${i}) then
+    echo "empty file created - deleting it..."
+    rm spliced_blc${NODES}_${INFILE}${i}
+  else
+    echo "(done)"
+  endif
+end 
+
+set PULSAR = `echo $INFILE | grep -ci _PSR_`
+if ($PULSAR == 1) then 
+  echo "8-bitting the spliced pulsar prodcut..."
+  /usr/local/sigproc/bin/sum_fil spliced_blc${NODES}_${INFILE}.gpuspec.0001.fil -obits 8 -o spliced_blc${NODES}_${INFILE}.gpuspec.8.0001.fil -qlen 10000
+
+  echo "pulsar - running prepfold on .8.0001.fil product:"
+  /home/obs/bin/prepfold_wrapper spliced_blc${NODES}_${INFILE}.gpuspec.8.0001.fil
+endif
+
+set DELETE = 1
+foreach i (.gpuspec.0000.fil .gpuspec.0001.fil .gpuspec.0002.fil)
+  if (! -s spliced_blc${NODES}_${INFILE}${i}) then
+    set DELETE = 0
+  endif
+end
+
+if ($DELETE == 0) then
+  echo "problems creating spliced files:"
+  ls -l spliced_blc${NODES}_${INFILE}${i}
+  echo "exiting without deleting originals..."
+endif
+
+echo "final set of spliced files:"
+ls -l spliced_blc${NODES}_${INFILE}${i}
+echo "deleting originals:"
+echo /bin/rm $THESEFILES
+# /bin/rm $THESEFILES
+
+echo -n "ending: "
+date
+set END = `date '+%s'`
+set SECONDS = `echo $START $END | awk '{print $2-$1}'`
+echo "total: $SECONDS seconds"
+
+/bin/rm $TMPFILE

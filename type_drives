@@ -1,0 +1,13 @@
+#! /bin/csh
+
+set TMPFILE = /tmp/test_drives.$$
+
+foreach i (`megacli -pdlist -a0 | grep "Device Id" | awk '{print $3}' | sort -n`)
+  smartctl -a -d megaraid,$i /dev/sda >& $TMPFILE
+  set MODEL = `grep Model $TMPFILE`
+  set FIRMWARE = `grep Firmware $TMPFILE`
+  set RATE = `grep Rotation $TMPFILE`
+  echo $i $MODEL $FIRMWARE $RATE
+end
+
+/bin/rm -f $TMPFILE

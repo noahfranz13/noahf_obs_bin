@@ -1,0 +1,63 @@
+#! /bin/bash
+
+infile=$1
+newmjd=$2
+outfile=$3
+
+if [ -z $outfile ]; then
+  echo "fil_tail input.fil new_mjd_start output.fil"
+  exit 0;
+fi
+
+tmpfile=/tmp/fil_tail.tmp
+
+/home/obs/bin/header_wrapper $infile > $tmpfile
+headersize=`grep "Header size" $tmpfile | awk '{print $NF}'`
+oldmjd=`grep "Time stamp of first sample" $tmpfile | awk '{print $NF}'`
+numbytes=`grep "Number of bits per sample" $tmpfile | awk '{print $NF/8}'`
+numchannels=`grep "Number of channels" $tmpfile | awk '{print $NF}'`
+sampledays=`grep "Sample time" $tmpfile | awk '{printf("%0.16f\n",$NF/(1000000*86400))}'`
+# echo $headersize - $oldmjd - $numbytes - $numchannels - $sampledays
+
+bytespersample=`echo $numbytes $numchannels | awk '{print $1*$2}'`
+deltamjd=`echo $newmjd $oldmjd | awk '{printf("%0.16f",$1-$2)}'`
+cutsamples=`echo $deltamjd $sampledays | awk '{printf("%d",$1/$2)}'`
+cutbytes=`echo $cutsamples $bytespersample | awk '{print $1*$2}'`
+tailvalue=`echo $cutbytes $headersize | awk '{print $1+$2+1}'`
+# echo $bytespersample - $deltamjd - $cutsamples - $cutbytes
+
+echo "trimming $cutsamples samples from the top ($cutbytes bytes)"
+
+head -c $headersize $infile > ${infile}.header
+/home/obs/bin/fix_fil_time ${infile}.header $newmjd
+mv ${infile}.header $outfile
+tail --bytes=+$tailvalue $infile >> $outfile
+
+echo 'done!'
+
+exit 0
+
+##########################################################
+
+Data file                        : /tmp/header_wrapper.24290
+Header size (bytes)              : 384
+Data size (bytes)                : 51380224
+Data type                        : filterbank (topocentric)
+Telescope                        : GBT
+Datataking Machine               : ?????
+Source Name                      : HIP109857
+Source RA (J2000)                : 22:15:03.0
+Source DEC (J2000)               : +57:02:37.7
+Frequency of channel 1 (MHz)     : 12345.000000000000000
+Channel bandwidth      (MHz)     : -0.002861022949219
+Number of channels               : 65536
+Number of beams                  : 1
+Beam number                      : 1
+Time stamp of first sample (MJD) : 58356.278472222220
+Gregorian date (YYYY/MM/DD)      : 2018/08/26
+Sample time (us)                 : 1073741.82400
+Number of samples                : 196
+Observation length (minutes)     : 3.5
+Number of bits per sample        : 32
+Number of IFs                    : 1
+

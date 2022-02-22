@@ -1,0 +1,14 @@
+#! /bin/bash
+
+TMPFILE=/tmp/obs_stop.$$
+
+cat /dev/null > $TMPFILE
+
+echo '<html><pre>' >> $TMPFILE
+
+echo "HELLO MATT" >> $TMPFILE
+
+echo '</pre></html>' >> $TMPFILE
+  
+mail -v -s "$(echo -e "GB observations stopping\nContent-Type: text/html")" lebofsky@berkeley.edu < $TMPFILE
+/bin/rm $TMPFILE

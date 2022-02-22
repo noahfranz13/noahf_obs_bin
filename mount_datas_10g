@@ -1,0 +1,25 @@
+#! /bin/bash
+
+hosts="${@:-$(echo bls{0..9} blc{0..7}{0..7})}"
+
+for host in $hosts; do
+  netname=${host}-10-0.gb.nrao.edu
+  datas="datax datax2"
+  if [ `echo $host | grep -c bls` = 1 ]; then
+    datas="datax datax2 datax3" # bls nodes have datax3 as well
+  fi
+  for data in $datas; do
+    mount -o rw ${netname}:/$data /mnt_$host/$data &
+  done  
+done
+
+# new DNS doesn't require this malarkey:
+# netname=`echo $host | sed 's/blc0/blc/'` # blc00-blc07 are blc0-7 according to dns :(
+
+# OLD CODE FOR PREVIOUS blc18 BEFORE DNS
+#
+##  if [ $netname = "blc18" ]; then
+##    netname="10.17.0.185" # special case - blc18 is not in DNS!
+##  else
+##  netname=${netname}-10-0.gb.nrao.edu
+##  fi

@@ -1,0 +1,8 @@
+#! /bin/csh
+
+set HOSTNAME = `hostname`
+foreach i (`ls guppi_*`)
+  set NEWNAME = ${HOSTNAME}_$i
+  echo mv $i $NEWNAME
+  mv $i $NEWNAME
+end

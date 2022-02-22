@@ -1,0 +1,71 @@
+#! /bin/bash
+
+TMPFILE=/tmp/health.out.$$
+
+echo "<pre>"
+echo "DATA DISKS:"
+echo ====================
+/home/obs/bin/all_df_bg /datax | column -c 120
+echo " "  
+
+echo "TEMPS: ( cpu / gpu )"
+echo ====================
+/home/obs/bin/all_nodes_bg_with_storage -n "/home/ganglia/cpu_avg_temp | awk '{printf(\"%3.4f \",\$1)}'; /home/ganglia/nvidia_temp" | grep "bl" | column -c 100
+echo " "
+
+#for i in bls{0..7} blc{0..7}{0..7} ; do 
+#  echo $i | awk '{printf("%-5s : ",$1)}'
+#  echo -n `ssh $i /home/ganglia/cpu_avg_temp` | awk '{printf("%3.4f ",$1)}'
+#  echo `ssh $i /home/ganglia/nvidia_temp`
+#done
+#echo " "
+
+echo "FANS:"
+echo ====================
+for i in bls{0..9}x blc{0..7}{0..7}x ; do 
+  echo $i | awk '{printf("%-6s : ",$1)}'
+  /usr/bin/ipmitool -I lanplus -U ADMIN -P StormArea51 -H $i sdr | grep FAN | sed 's/disabled/----/' | sed 's/ns/--/' | awk '{printf("%s:%4s(%s) ",$1,$3,$NF)}';
+  echo " "
+done
+echo " "
+
+echo "FAILING DRIVES:"
+echo ====================
+/home/obs/bin/all_nodes_bg_with_storage -n "/home/obs/bin/parse_test_drives"
+echo " "
+
+#for i in bls{0..7} blc{0..7}{0..7} ; do 
+#  echo $i | awk '{printf("%-5s : ",$1)}'
+#  ssh $i /home/obs/bin/test_drives >& $TMPFILE
+#  COUNT=`grep -vc enc $TMPFILE` 
+#  echo $COUNT | awk '{printf("(%2d) ",$1)}'
+#  BADCOUNT=`grep -v enc $TMPFILE | grep -vc " 0                  0               0                      0                     0"`
+#  if [ $BADCOUNT -eq 0 ]; then
+#    echo "0"
+#  else
+#    echo -n $BADCOUNT
+#    grep -v " 0                  0               0                      0                     0" $TMPFILE | grep -v enc | awk '{printf(" [%s:%s] (%s %s %s %s %s)",$1,$2,$4,$5,$6,$7,$8)}'
+#    echo " "
+#  fi
+#done
+#rm $TMPFILE
+#echo " "
+
+echo "PREDICTIVE FAILURES:"
+echo ====================
+/home/obs/bin/all_nodes_bg_with_storage -p /home/mattl/predictive_failure_counts | grep -v 'Media Error:      0 Other Error:      0 Predictive Failure:      0' | grep Media
+echo " "
+
+
+echo "HOT SPARES:"
+echo ====================
+echo " "
+/home/obs/bin/all_nodes_bg_with_storage -n /home/obs/bin/get_spares
+
+#for i in bls{0..7} blc{0..7}{0..7} ; do 
+#  echo $i | awk '{printf("%-5s : ",$1)}'
+#  ssh $i /home/obs/bin/megasas_status | grep "Hotspare Information" | awk '{i=NF-2; printf("%s ",$i)}; END {printf("\n");}'
+#done
+#echo " "
+
+echo "</pre>"

@@ -1,0 +1,21 @@
+#! /bin/csh
+
+if (x == x$2) then
+  echo do_gpupsec_collate dir collate_dir
+  echo "  try to collate everything in dir and put products into collate_dir" 
+  exit 0
+endif
+
+cd $1
+
+# foreach i (`ls -1 *DIAG*.gpuspec.done | awk -F/ '{print $NF}' | sed 's/blc[0-9]_//' | sed 's/blc[0-9][0-9]_//' | sed 's/.gpuspec.done//' | sort | uniq`)
+# foreach i (`ls -1 *.gpuspec.done | awk -F/ '{print $NF}' | sed 's/blc[0-9]_//' | sed 's/blc[0-9][0-9]_//' | sed 's/.gpuspec.done//' | sort | uniq`)
+# this version skips anything that's been spliced already, i.e. look for anything that's been reduced (*.gpuspec.done) *and* still has filterbank files hanging around (*.gpuspec.0000.fil)
+foreach i (` ls -1 *.gpuspec.done *.0000.fil | awk -F/ '{print $NF}' | sed 's/blc[0-9]_//' | sed 's/blc[0-9][0-9]_//' | sed 's/.gpuspec.done//' | sed 's/.gpuspec.0000.fil//' | sort | uniq -c | awk '$1==2 {print $2}'`)
+  echo -n $i" - starting : "
+  date
+  /home/obs/bin/gpuspec_collate $i $2
+  echo -n "finished $i : "
+  date
+  echo ===============================================
+end

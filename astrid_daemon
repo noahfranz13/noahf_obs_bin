@@ -1,0 +1,66 @@
+#! /usr/bin/env python3
+
+import socket
+import re
+import os, sys
+import time
+import slacker
+import argparse	
+import select
+import json
+import redis
+import subprocess
+
+def bot_msg(msg_str):
+
+	output = {'text': msg_str}
+	
+	output['username'] = "Breakthrough Bot"
+	output['icon_emoji'] = ':robot_face:'
+	output['as_user'] = False 
+	return output
+
+
+r = redis.StrictRedis(host='localhost', port=6379, db=0)
+p = r.pubsub()
+p.subscribe('astrid')
+
+while True:
+    message = p.get_message()
+    if message: 
+        command = message['data']
+        if command == 1 :
+            print ("starting...")
+        elif command == "command:uptime" : 
+            print ("running uptime")
+            os.system("uptime")
+        elif command == "command:run_canary" :
+            print ("running canary")
+            # old code
+            # os.system("/home/obs/bin/run_canary")
+            # end old code
+            # new code - that didn't actually put things in the background
+            # process = subprocess.Popen(['/home/obs/bin/run_canary'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            # stdout,stderr = process.communicate()
+            # print ("canary stdout:")
+            # print ("%s" % stdout.decode("utf-8"))
+            # print ("canary stderr:")
+            # print ("%s" % stderr.decode("utf-8"))
+            # end new code
+            # but this might work to run the canary in the background
+            process = subprocess.Popen(['/home/obs/bin/run_canary'])
+        elif command == "command:update_obsfreq" :
+            print ("running update_obsfreq")
+            #os.system("/opt/dibas/bin/update_obsfreq")
+            os.system("/usr/bin/circusctl --endpoint tcp://blh0:5555 restart ifmonitor")
+        else :
+            print ("slacking message: %s " % message['data'])
+            # slack_chan = '@mattlebofsky'
+            slack_chan = '#gbt_observations'
+            with open(os.getenv('HOME')+"/.slack_api_tester.token") as f:
+                token = f.read()
+            slack = slacker.Slacker(token)
+            slack.chat.post_message(slack_chan,**bot_msg("%s" % message['data']))
+
+    if not message:
+      time.sleep(10)

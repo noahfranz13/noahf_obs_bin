@@ -1,0 +1,157 @@
+#! /bin/csh
+
+if (x == x$2) then
+  echo "chain spliced_file.fil final_dir"
+  echo " "
+  echo "will attempt to do the following on the filterbank file in question:"
+  echo "1. pad it if necessary"
+  echo "2. fix the filterbank headers"
+  echo "3. dice it (trim the useless parts of the bands off the edges)"
+  echo "4. convert to hdf5"
+  exit 0
+endif
+
+set FILFILE = $1
+set FINALDIR = $2
+
+############# testing/setup...
+
+if (! -f $FILFILE) then
+  echo "cannot find file: $FILFILE"
+  exit 0
+endif
+
+set WHOAMI = `whoami`
+set PERMS = `/bin/ls -l $FILFILE| awk '{print $3}'`
+if ($WHOAMI != $PERMS) then
+  echo "file $FILFILE owned by $PERMS - exiting..."
+  exit 0
+endif
+
+if (! -d $FINALDIR) then
+  echo "cannot find directory: $FINALDIR"
+  exit 0
+endif
+
+cd $FINALDIR
+set AVAIL = `df . | tail -1 | awk '{printf("%d",$4/(1024*1024))}'`
+if ($AVAIL < 500) then
+  echo "not enough space available in $2 - exiting..."
+  exit 0
+endif
+
+set WHICHBAND = `/home/obs/bin/which_band $FILFILE | awk '{print $2}'`
+if ($WHICHBAND != "L" && $WHICHBAND != "S" && $WHICHBAND != "C" && $WHICHBAND != "X") then
+  echo "we are only doing L/S/C/X band for now - this band is: $WHICHBAND"
+  exit 0
+endif
+
+# set impossible values
+set LOFREQ = 0
+set HIFREQ = 1000000
+
+set ISPULSAR = `echo $FILFILE | grep -c .0001.fil`
+
+if ($WHICHBAND == "L") then
+  set LOFREQ = 1025       # For L-band we plan to cut the band at 1.025 GHz (low, bottom) and 1.925 GHz (high, top). 
+  set HIFREQ = 1925
+endif
+
+if ($WHICHBAND == "S") then
+  set LOFREQ = 1820       # For S-band we plan to cut the band at 1.820 GHz (low, bottom) and 2.720 GHz (high, top). 
+  set HIFREQ = 2720
+endif
+
+if ($WHICHBAND == "C") then
+  set LOFREQ = 3950       # For C-band we plan to cut the band at 3.950 GHz (low, bottom) and 8.200 GHz (high, top). # TESTING
+  set HIFREQ = 8200
+endif
+
+if ($WHICHBAND == "X") then
+  set LOFREQ = 7800       # For X-band we plan to cut the band at 7.800 GHz (low, bottom) and 11.100 GHz (high, top). # TESTING
+  set HIFREQ = 11100
+endif
+
+##### NEW - if this is a 0001.fil pulsar product, don't dice and thus set LO/HI to impossible values
+
+
+echo -n "starting: "
+date
+set START = `date '+%s'`
+
+#############
+# pad
+#############
+
+# TBD
+
+#############
+# fix
+#############
+
+echo ==========================================
+echo FIXING:
+echo ==========================================
+
+# old version:
+# set FITS_FIXER = /home/hisaacson/gofits/blside/fits_header_fixup.py
+#
+# set TMPFILE = /tmp/fits_fixer.out.$$
+# echo command: python $FITS_FIXER -f $FILFILE -e True -l /tmp/junk.txt
+# python $FITS_FIXER -f $FILFILE -e True -l /tmp/junk.txt |& tee $TMPFILE
+# set ERROR = `grep -c 'cannot find logname' $TMPFILE`
+# rm $TMPFILE
+# if ($ERROR == 1) then
+#   exit 0
+# endif
+
+set CHAIN_FIXER = /home/obs/bin/chain_fixup
+
+set TMPFILE = /tmp/chain_fixup.$$
+echo command: $CHAIN_FIXER $FILFILE |& tee $TMPFILE
+$CHAIN_FIXER $FILFILE |& tee $TMPFILE
+set ERROR = `grep -c 'bailing' $TMPFILE`
+rm $TMPFILE
+if ($ERROR == 1) then
+  echo "exiting due to failure during fix..."
+  exit 0
+endif
+
+#############
+# dice
+#############
+
+echo ==========================================
+echo DICING AND HDF5ING:
+echo ==========================================
+
+# only dice/convert if non-pulsar
+if ($ISPULSAR == 0) then
+  set NEWNAME = `basename $FILFILE | sed 's/.fil$/.creating.h5/'`
+  echo command: bldice -f $FILFILE -o /$FINALDIR/$NEWNAME -b $LOFREQ -e $HIFREQ -x h5 -l 36
+  bldice -f $FILFILE -o /$FINALDIR/$NEWNAME -b $LOFREQ -e $HIFREQ -x h5 -l 48
+  # fil2h5  -n /$FINALDIR/$NEWNAME $FILFILE
+  set FINALNAME = `echo $NEWNAME | sed 's/.creating.h5$/.h5/'`
+  mv $FINALDIR/$NEWNAME $FINALDIR/$FINALNAME
+else
+  echo "pulsar file - skipping dice/conversion and just copying..."
+  set NEWNAME = `basename $FILFILE | sed 's/.fil$/.creating.fil/'`
+  cp $FILFILE /$FINALDIR/$NEWNAME
+  set FINALNAME = `echo $NEWNAME | sed 's/.creating.fil$/.fil/'`
+  mv $FINALDIR/$NEWNAME $FINALDIR/$FINALNAME
+endif
+
+############# cleanup...
+
+if (-f $FINALDIR/$FINALNAME) then 
+  mv $FILFILE ${FILFILE}.x2h # x2h -> xferred to holding
+  echo mv $FILFILE ${FILFILE}.x2h 
+else 
+  echo "ERROR creating final .h5/.fil file - NOT renaming original to .x2h"
+endif
+
+echo -n "ending: "
+date
+set END = `date '+%s'`
+set SECONDS = `echo $START $END | awk '{print $2-$1}'`
+echo "total: $SECONDS seconds"

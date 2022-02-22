@@ -1,0 +1,34 @@
+#! /bin/bash
+
+newline=0
+if [ "x$1" == "x-n" ]; then
+  newline=1 
+  shift
+fi
+
+TMPFILE=/tmp/all_nodes.$$
+
+hosts=`echo bls{0..5}`
+for i in $hosts; do 
+   # if [ $newline -eq 1 ]; then
+   #   echo -n $i" : "
+   # else
+   #   echo $i =========================
+   # fi 
+   ssh -o BatchMode=yes -o ConnectTimeout=1 $i "$1" >& $TMPFILE.$i &
+done
+
+for job in `jobs -p`
+do
+    wait $job
+done
+
+for i in $hosts; do
+   if [ $newline -eq 1 ]; then
+     echo -n $i" : "
+   else
+     echo $i =========================
+   fi 
+   cat $TMPFILE.$i
+   /bin/rm $TMPFILE.$i
+done

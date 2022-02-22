@@ -1,0 +1,17 @@
+#! /bin/csh
+
+if (x == x$1) then
+  echo 'which root directory?'
+  exit 1
+endif  
+
+foreach h (0)
+  echo -n bls$h :" "
+  ssh bls$h 'find '$1' -name "*guppi*raw*"' > /tmp/check_rewrite.$$
+  set ALL = `grep -c guppi /tmp/check_rewrite.$$`
+  set REWRITE = `grep -c blc /tmp/check_rewrite.$$`
+  set DELTA = `echo $ALL $REWRITE | awk '{print $1-$2}'`
+  echo $REWRITE out of $ALL '('$DELTA')'
+end
+
+/bin/rm /tmp/check_rewrite.$$

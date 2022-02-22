@@ -1,0 +1,12 @@
+#! /bin/csh
+
+if (x == x$1) then
+  echo "which root directory?"
+  exit 1
+endif
+
+/home/obs/bin/all_check_rewrite $1
+echo =====
+/home/obs/bin/all_check_8to2 $1
+echo =====
+/home/obs/bin/all_df $1

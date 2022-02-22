@@ -1,0 +1,32 @@
+#! /bin/csh
+
+if (x == x$1) then
+  echo "prepfold_wrapper input_fil_file"
+  exit 0
+endif
+
+set TMPFILE = ./tmp.pf.$$
+
+source /usr/local/pulsar64/pulsar.csh >& /dev/null
+
+set PULSAR = `echo $1 | sed 's/Psr/PSR/' | sed 's/psr/PSR/' | awk -F_PSR_ '{print $2}' | awk -F_ '{print $1}' | sed 's/j/J/' | sed 's/b/B/'`
+
+mv $1 ${TMPFILE}.fil
+
+set NOFIL = `echo $1 | sed s/.fil//`
+
+#prepfold ${TMPFILE}.fil -psr $PULSAR -nosearch -n 1024 -dmstep 1  -runavg
+prepfold ${TMPFILE}.fil -psr $PULSAR -nosearch -n 1024 -dmstep 1
+
+mv ${TMPFILE}.fil $1
+mv ${TMPFILE}_PSR_${PULSAR}.pfd ${NOFIL}_PSR_${PULSAR}.pfd
+mv ${TMPFILE}_PSR_${PULSAR}.pfd.bestprof ${NOFIL}_PSR_${PULSAR}.pfd.bestprof
+mv ${TMPFILE}_PSR_${PULSAR}.pfd.ps ${NOFIL}_PSR_${PULSAR}.pfd.ps
+
+# NOTES:
+# prepfold blc0001020304050607_guppi_57520_31854_DIAG_PSR_J1807-0847_0002.gpuspec.8.0001.fil -psr J1807-0847 -nosearch -n 1024 -dmstep 1
+# blc5_guppi_57401_PSR_J2321+6024_0016_PSR_J2321+6024.pfd  blc5_guppi_57401_PSR_J2321+6024_0016_PSR_J2321+6024.pfd.bestprof  blc5_guppi_57401_PSR_J2321+6024_0016_PSR_J2321+6024.pfd.ps
+#-rw-r--r-- 1 root    root     3442676019 May 12 18:33 blc0001020304050607_guppi_57520_31854_DIAG_PSR_J1807-0847_0002.gpuspec.8.0001.fil
+#-rw-r--r-- 1 root    root       67620513 May 12 18:35 blc0001020304050607_guppi_57520_31854_DIAG_PSR_J1807-0847_0002.gpuspec.8.0001_PSR_J1807-0847.pfd
+#-rw-r--r-- 1 root    root          20432 May 12 18:36 blc0001020304050607_guppi_57520_31854_DIAG_PSR_J1807-0847_0002.gpuspec.8.0001_PSR_J1807-0847.pfd.bestprof
+#-rw-r--r-- 1 root    root        2782153 May 12 18:36 blc0001020304050607_guppi_57520_31854_DIAG_PSR_J1807-0847_0002.gpuspec.8.0001_PSR_J1807-08

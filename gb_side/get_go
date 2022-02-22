@@ -1,0 +1,39 @@
+#! /bin/bash
+
+# this script reads GB generated archival data per each scan and pulls out pertinent info from GO directory
+# As well, put out real RA and Dec info from Antenna directory
+# currently run as a cron job  
+
+
+tmpfile=/tmp/get_go.tmp
+source /users/mlebofsk/mattpy37/bin/activate
+for x in `ls -d /home/archive/science-data/[2-9][0-9]{A..B}`; do # good until 2099!
+  cd $x
+  for i in `find . -maxdepth 1 -name "*_99[6,9]*" -mtime -60`; do
+    session=`echo $i | awk -F/ '{print $NF}'`
+    isbl=`/users/mlebofsk/is_bl_session $session`
+    if [[ "$isbl" == "yes" ]]; then 
+      for j in `ls $x/$i/GO/*fits`; do
+        #echo $j
+        #fold -w 80 $j | head -1
+        fold -w 80 $j > $tmpfile
+        object=`  grep -a "OBJECT  =" $tmpfile | awk '{print $3}' | sed "s/'//g"`
+        time=`    grep -a "DATE-OBS=" $tmpfile | awk '{print $2}' | sed "s/'//g"`
+        rcvr=`    grep -a "RECEIVER=" $tmpfile | awk '{print $2}' | sed "s/'//g"`
+        skyfreq=` grep -a "SKYFREQ =" $tmpfile | awk '{print $3}' | sed "s/'//g"`
+        restfrq=` grep -a "RESTFRQ =" $tmpfile | awk '{print $3}' | sed "s/'//g"`
+        observer=`grep -a "OBSERVER=" $tmpfile | awk -F= '{print $2}' | awk -F/ '{print $1}'`
+        echo -n $session $object $time $rcvr $skyfreq $restfrq $observer
+        echo -n " "
+        thisfile=`basename $j`
+        #stuff=`/opt/local/bin/python3.7 /users/mlebofsk/bl_open_fits.py -d $x/$i/Antenna/ -f $thisfile`
+        stuff=`python /users/mlebofsk/bl_open_fits.py -d $x/$i/Antenna/ -f $thisfile`
+        echo "$stuff"
+        #echo ""
+        rm $tmpfile
+      done
+    fi 
+  done
+done
+
+exit 0

@@ -1,0 +1,18 @@
+#! /bin/bash
+
+TMPFILE=/tmp/all_nodes_quick_find.$$
+
+hosts=`echo bls{0..9} blc{0..1}{0..7} blc18 blc{2..7}{0..7}`
+for i in $hosts; do
+   ssh -o BatchMode=yes -o ConnectTimeout=1 $i 'find /datax* -name "*'${1}'*" -ls' >& $TMPFILE.$i &
+done
+
+for job in `jobs -p`
+do
+    wait $job
+done
+
+for i in $hosts; do
+   awk '{printf("'$i': %s\n",$0)}' $TMPFILE.$i
+   /bin/rm $TMPFILE.$i
+done

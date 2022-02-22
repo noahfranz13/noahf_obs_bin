@@ -1,0 +1,5 @@
+#! /usr/bin/env perl
+
+$civil = ((($ARGV[0]+2400000.5) - 2440587.5) * 86400) + $ARGV[1];
+$x = gmtime($civil);
+print $x . "\n";

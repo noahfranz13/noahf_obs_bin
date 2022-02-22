@@ -1,0 +1,4 @@
+#! /bin/bash
+hosts="${@:-$(echo blc{0..0}{0..7})}"
+
+for h in $hosts; do ssh -x -o BatchMode=yes -o ConnectTimeout=1 $h 'ls -ltr /datax/dibas/AGBT1??_???_*/GUPPI/*/gupp*raw | tail -1' ; done

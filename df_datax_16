@@ -1,0 +1,3 @@
+#! /bin/bash
+
+for h in blc{0..1}{0..7}; do ssh -x $h df -h /datax; done

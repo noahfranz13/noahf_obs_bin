@@ -1,0 +1,28 @@
+#! /bin/csh
+
+set CWD = `pwd`
+
+foreach FILE (`find . -name "*.2bit.raw" -print`)
+
+  cd `dirname $CWD/$FILE`
+  set NAME = `basename $FILE`
+  set tempname = `echo $NAME | awk -F\. '{print $3"_"$1"."$2"."$4}'`
+
+  set nf = `echo $NAME | awk -F\_ '{print NF}'`
+  if($nf == 5 ) then
+      set newname  =  `echo $tempname | awk -F\_ '{print $2"_"$1"_"$3"_"$4"_"$5"_"$6}'`
+  else if($nf == 6 ) then
+      set newname  =  `echo $tempname | awk -F\_ '{print $2"_"$1"_"$3"_"$4"_"$5"_"$6"_"$7}'`
+  else if($nf == 7) then
+      set newname  =  `echo $tempname | awk -F\_ '{print $2"_"$1"_"$3"_"$4"_"$5"_"$6"_"$7"_"$8}'`
+  else if($nf == 8) then
+      set newname  =  `echo $tempname | awk -F\_ '{print $2"_"$1"_"$3"_"$4"_"$5"_"$6"_"$7"_"$8"_"$9}'`
+  else
+      echo $NAME ": invalid number of tokens"
+      exit
+  endif
+
+  echo mv $NAME $newname
+  mv $NAME $newname
+
+end

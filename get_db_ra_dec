@@ -1,0 +1,15 @@
+#! /bin/csh
+
+if (x == x$1) then
+  echo "get_ra_dec TARGET_NAME"
+  exit 1
+endif
+
+set TARGET = `echo $1 | tr a-z A-Z`
+
+cat << HERE | mysql -N -u obs -h 104.154.94.28 BLtargets | sort | uniq
+select targets.name, targets.RA_dec_hrs, targets.DECL_dec_deg
+  from targets
+  where 
+    targets.name = "${TARGET}" limit 1;
+HERE

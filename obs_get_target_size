@@ -1,0 +1,16 @@
+#! /bin/bash
+
+# am i (the hosts) not in hosts_running file? then exit
+hostname=`hostname`
+infile=`grep -c $hostname /home/obs/triggers/hosts_running`
+if [ $infile == 0 ]; then
+  exit 0
+fi
+
+# assume target is in most recent dibas observation directory
+
+MOSTRECENT=`ls -trd /datax/dibas/?GBT1??_999_* | tail -1 `
+du -mc  $MOSTRECENT/*/*/*$1*.raw |& grep -v "No such file" | grep total |  awk '{printf("%0.1f\n",$1/42933)}'
+
+# 42933 is roughly how many megabytes per minute
+

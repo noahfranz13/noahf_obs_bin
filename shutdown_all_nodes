@@ -1,0 +1,18 @@
+#! /bin/bash
+
+for cn in bls{0..8} blc{0..7}{0..7} blc18; do 
+  ipmi=${cn}
+  echo $ipmi" : shutdown"
+  ssh -o BatchMode=yes -o ConnectTimeout=1 $ipmi "shutdown -h now"
+  sleep 2
+done
+
+for cn in bls{0..9} blc{0..7}{0..7} blc18; do 
+  ipmi=${cn}x
+  echo -n $ipmi" : "
+  /usr/bin/ipmitool -I lanplus -U ADMIN -P StormArea51 -H $ipmi power off 
+  sleep 2
+done
+
+# uncomment if you want to shut down head node as well
+# shutdown -h now

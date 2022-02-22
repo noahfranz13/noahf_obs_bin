@@ -1,0 +1,15 @@
+#! /bin/csh
+
+set LOCALROOT = /datax/dibas
+
+# first, move the dibas dirs to something more appropriate
+
+foreach i (`ls $LOCALROOT`)
+  set SUFFIX = `stat $LOCALROOT/$i | grep Modify: | awk '{print $2}' | sed s/-//g`
+  if (! -d ${LOCALROOT}.$SUFFIX) then
+    mkdir ${LOCALROOT}.$SUFFIX
+    echo "made directory: ${LOCALROOT}.$SUFFIX"
+  endif
+  echo mv ${LOCALROOT}/$i ${LOCALROOT}.$SUFFIX
+  mv ${LOCALROOT}/$i ${LOCALROOT}.$SUFFIX
+end

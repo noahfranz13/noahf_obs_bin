@@ -1,0 +1,23 @@
+This directory contains scripts that run in the Green Bank environment, typically on fourier.
+
+Some of the scripts are run as a cron job (currently on fourier) once a day:
+
+cron_get_go : 
+  master cron job
+
+get_go : 
+  main script that scrapes recent info from the archival GO fits files
+  and puts them into a log - this script uses bl_open_fits.py to scrape
+  out pointing info from Antenna fits files (requires python37 venv)
+
+bl_open_fits.py :
+  aforementioned pointing scraper script
+
+get_go_session :
+  a hacked version of get_go to get GO fits info from a particular session
+  from a different archival source (used in the case where whole sessions
+  didn't appear in the archives for some reason)
+
+go_to_mysql :
+  script to convert get_go logs into a bunch of sql statements for 
+  insertion in the go_scans database

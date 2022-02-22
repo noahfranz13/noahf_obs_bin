@@ -1,0 +1,17 @@
+#! /bin/csh
+
+foreach FILE (`find . -name "blc[0-9]_guppi*" -print`)
+  # set BANK = `echo $FILE | awk -F/ '{print $(NF-1)}'
+  set NEWFILE = `echo $FILE \
+    | sed 's#/blc0_guppi_#/blc00_guppi_#' \
+    | sed 's#/blc1_guppi_#/blc01_guppi_#' \
+    | sed 's#/blc2_guppi_#/blc02_guppi_#' \
+    | sed 's#/blc3_guppi_#/blc03_guppi_#' \
+    | sed 's#/blc4_guppi_#/blc04_guppi_#' \
+    | sed 's#/blc5_guppi_#/blc05_guppi_#' \
+    | sed 's#/blc6_guppi_#/blc06_guppi_#' \
+    | sed 's#/blc7_guppi_#/blc07_guppi_#'`
+  
+  echo mv $FILE $NEWFILE
+  mv $FILE $NEWFILE
+end

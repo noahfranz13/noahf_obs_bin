@@ -1,0 +1,35 @@
+#! /bin/bash
+
+#echo "turned off temporarily" 
+#exit 0
+
+dofil=""
+topdir=$1
+if [ "$topdir" == "-f" ]; then
+  dofil=$topdir
+  shift
+  topdir=$1
+fi
+
+shift
+hosts="${@:-$(echo blc{0..7}{0..7})}"
+
+if [ "$topdir" == "" -o "$topdir" == "-h" -o "$topdir" == "--help" ]; then
+  echo "which root directory?"
+  echo " "
+  echo "usage: do_all_rawspec [-f] root_directory [hosts]"
+  echo '   hosts defaults to: blc{0..7}{0..7}'
+  echo '   -f : do filterbank reduction instead of h5'
+  exit 1
+fi
+
+basename=`basename $topdir`
+
+for host in $hosts; do
+  echo starting rawspec on ${host}:$topdir
+  if [ "$dofil" == "" ]; then
+    sudo ssh  -o BatchMode=yes -o ConnectTimeout=1 $host '/home/obs/bin/do_rawspec '$dofil' '$topdir' >& /home/obs/logs/do_rawspec.out.'$host'.'${basename}.$$ &
+  else
+    sudo ssh  -o BatchMode=yes -o ConnectTimeout=1 $host '/home/obs/bin/do_rawspec.fil '$dofil' '$topdir' >& /home/obs/logs/do_rawspec.out.'$host'.'${basename}.$$ &
+  fi
+done

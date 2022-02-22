@@ -1,0 +1,14 @@
+#! /bin/bash
+
+PADEXE=/home/obs/bin/splicecheck.py
+TMPFILE=/tmp/splicecheck.out.$$
+
+source /opt/pyve/activate sci
+
+$PADEXE $1 >& $TMPFILE
+OUTFILE=`grep Wrote $TMPFILE | awk '{print $2}'`
+if [ -n "$OUTFILE" ]; then
+  echo $OUTFILE
+  exit 0
+fi
+echo $1

@@ -1,0 +1,12 @@
+#! /bin/bash
+
+for i in blc{0..2}{0..7}; 
+  do
+    for j in datax datax2;
+      do
+        avail=`ssh -o BatchMode=yes -o ConnectTimeout=1 $i "df -P /$j" |& grep -v Avail | awk '{print $4}'`
+        /home/obs/bin/redis-master-set ${i}-${j}-disk-space-free $avail
+      done
+  done
+
+/home/obs/bin/redis-master-set redis-disk-space-free-last-run `date '+%s'`

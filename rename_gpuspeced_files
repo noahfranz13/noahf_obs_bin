@@ -1,0 +1,29 @@
+#! /bin/csh
+
+if (x == x$1) then
+  echo "which root directory?"
+  exit 1
+endif
+
+set THISDIR = `pwd`
+set HOSTNAME = `hostname`
+
+foreach i (`find $1 -name "guppi*fil" -print | sed 's/.gpuspec.[0-9][0-9][0-9][0-9].fil//' | sort | uniq`)
+
+  cd $THISDIR
+
+  set BASENAME = `basename $i`
+  set DIRNAME = `dirname $i`
+
+  cd $DIRNAME
+
+  echo $i
+  echo =====================================================================
+
+  foreach j (`ls ${BASENAME}*`)
+    set NEWNAME = ${HOSTNAME}_$j
+    echo mv $j $NEWNAME
+    mv $j $NEWNAME
+  end
+
+end

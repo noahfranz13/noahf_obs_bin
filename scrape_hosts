@@ -1,0 +1,13 @@
+#!/bin/bash
+TEMPFILE='/home/obs/nmap_output'
+sudo nmap -n -sn -oG - 10.0.100.0/24 > ${TEMPFILE}
+
+ips=`tail -n +2 $TEMPFILE | head -n -2 | awk '{print $2}'`
+rm $TEMPFILE
+echo `hostname` 
+for ip in $ips;
+do
+	name=`nslookup $ip | awk '{print $4}' | sed 's/x.*/ /g' | awk '{print $1}'`
+	echo $name
+done
+

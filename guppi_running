@@ -1,0 +1,10 @@
+#! /bin/csh
+
+if (x == x$1) then
+  echo "guppi_running node"
+  echo ' ...counts # of *guppi* processes running on said node'
+  exit 0
+endif
+
+ssh $1 "ps -ef | grep guppi | grep -v grep | wc -l"
+

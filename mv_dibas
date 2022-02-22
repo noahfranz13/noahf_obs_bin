@@ -1,0 +1,10 @@
+#! /bin/bash
+
+mvdir=`ls -d /datax/dibas.* | head -1`
+mvdirdu=`du -sk $mvdir | awk '{print $1}'`
+available=`df -k /datax2 | awk '{print $4}' | tail -1`
+delta=$(expr $available - $mvdirdu)
+if [ $delta -gt 100000000 ] ; then
+  echo mv $mvdir /datax2
+  mv $mvdir /datax2 >> /home/obs/logs/mv_dibas.`hostname`.$$ &   
+fi

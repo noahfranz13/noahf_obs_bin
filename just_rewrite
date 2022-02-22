@@ -1,0 +1,38 @@
+#! /bin/csh 
+
+set TRIGGER = /home/obs/triggers/stop_rewrite
+set REWRITEEXE = /home/davidm/bl_rewrite.rb
+
+if (x == x$1) then
+  echo "REWRITEEXE root_dir - does a find starting at root_dir for files to be rewritten, then rewrites them"
+  exit 1
+endif
+
+set CURDIR = `pwd`
+
+foreach i (`find $1 -name "guppi*.raw" |& grep -v "permission denied" | grep -v 'lost+found' | grep -v '/blc'`)
+
+  if (-f $TRIGGER) then
+    echo "triggerfile $TRIGGER exists... exiting"
+    exit 0
+  endif
+  echo -n working on $i - 
+  echo `date`
+  if (-f ${i}.working) then
+    echo "   .working file exists - skipping!"
+  else 
+    touch ${i}.working
+    set DIRNAME = `dirname $i`
+    set BASENAME = `basename $i`
+    cd $DIRNAME
+    $REWRITEEXE $BASENAME 
+    if ($status == 0) then
+      echo " - success"
+    else
+      echo " - ERROR"
+    endif
+    cd $CURDIR
+    /bin/rm ${i}.working
+  endif
+
+end

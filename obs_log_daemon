@@ -1,0 +1,40 @@
+#! /usr/bin/env python
+
+#import socket
+import re
+import os, sys
+import time
+#import argparse	
+#import select
+import yaml
+import redis
+
+logdir = "/home/obs/target_logs"
+
+r = redis.StrictRedis(host='localhost', port=6379, db=0)
+p = r.pubsub()
+p.psubscribe('bl_disk_watch://blc*')
+
+while True:
+    message = p.get_message()
+    if message: 
+        watchchannel = message['channel']
+        watchdata = message['data']
+        if watchdata == 1 :
+            print "starting..."
+        else :
+            # print "channel %s - message: %s " % (watchchannel, watchdata)
+            hostname = watchchannel[16:] # trim off bl_disk_watch:// 16 chars
+            ydata = yaml.load(watchdata)
+            session = ydata['name'].split("/")[3]
+            target = ydata['name'].split("/")[6][18:].split(".")[0][0:-5]
+            output = "%s %s %s %s %s %s %s" % (hostname, session, target, ydata['name'], ydata['time'], ydata['size'], ydata['scanlen'])
+            # print "writing: " + output
+            f = open(logdir + "/" + session, "a+",0)            
+            f.write(output + "\n")
+            f.close
+
+    if not message:
+      time.sleep(10)
+
+# channel bl_disk_watch://blc00 - message: {name: '/datax/dibas/AGBT19A_999_06/GUPPI/BLP00/guppi_58527_79651_HIP38325_0111.0013.raw', time: 1550095951, size: 1610692608, scanlen: 300.0} 

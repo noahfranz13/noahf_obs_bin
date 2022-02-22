@@ -1,0 +1,29 @@
+#! /bin/csh
+
+if (x == x$1) then
+  echo 'archive_dibas root_dir   (where root_dir is something like "/datax2"'
+  echo '   will create hostname_dibas.yyyymmdd.tar.gz of any such dibas dir'
+  echo '   which contains no .fil or .raw files'
+  exit 0
+endif
+
+set ROOTDIR = $1
+set HOSTNAME = `hostname`
+
+cd $ROOTDIR
+foreach DIR (`ls -d dibas.????????`)
+  echo -n $DIR" === "
+  set RAWCOUNT = `ls $DIR/*/*/* |& grep -c '.raw$'`
+  set FILCOUNT = `ls $DIR/*/*/* |& grep -c '.fil$'`
+  echo -n "raw : $RAWCOUNT fil : $FILCOUNT"
+  if ($RAWCOUNT == 0 && $FILCOUNT == 0) then
+    echo " archiving..."
+    set TARNAME = ${HOSTNAME}_${DIR}.tar
+    tar cf ./$TARNAME ./$DIR
+    gzip ./$TARNAME 
+    rm -r $DIR
+  else 
+    echo ""
+  endif
+end
+

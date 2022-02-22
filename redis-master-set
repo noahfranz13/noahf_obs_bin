@@ -1,0 +1,4 @@
+#! /bin/bash
+
+REDISEXE='redis-cli -h 104.196.249.7'
+$REDISEXE hmset $1 value $2 time `date '+%s'` >& /dev/null

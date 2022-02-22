@@ -1,0 +1,16 @@
+#! /bin/csh
+
+foreach FILE (`find /mnt_* -name "spliced_blc*" -print`)
+# foreach FILE (`find /datax -name "spliced_blc*" -print`)
+  set OLDORDER = `echo $FILE | awk -Fspliced_blc '{print $2}' | awk -F_ '{print $1}'`  
+  set NEWORDER = ""
+  foreach i (`echo $OLDORDER | fold -2 | sort -n`)
+    set NEWORDER = "$NEWORDER$i"
+  end
+  if ($OLDORDER == $NEWORDER) then
+    echo "order: $FILE"
+  else
+    set NEWFILE = `echo $FILE | sed s/spliced_blc$OLDORDER/spliced_blc$NEWORDER/`
+    echo mv $FILE $NEWFILE
+  endif
+end

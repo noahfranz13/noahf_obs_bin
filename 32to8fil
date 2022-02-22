@@ -1,0 +1,51 @@
+#! /bin/csh
+
+if (x == x$1) then
+  echo "32to8fil filename.{raw,gpu}spec.0001.fil"
+  echo "   wrapper around sum_fil to convert 32-bit float 0001.fil into"
+  echo "   8-bit int 8.0001.fil"
+  exit 1
+endif
+
+set START = `date '+%s'`
+
+set INFILE = $1
+
+set OUTFILE = `echo $INFILE | sed 's/spec.0001.fil$/spec.8.0001.fil/'`
+
+if ($INFILE == $OUTFILE) then
+  echo "input file needs to be a .{raw,gpu}spec.0001.fil file"
+  exit 1
+endif
+
+if (-f $OUTFILE) then
+  echo "$OUTFILE already exists - exiting..." 
+  exit 1
+endif
+
+echo command: /usr/local/sigproc/bin/sum_fil $INFILE -obits 8 -o $OUTFILE -qlen 10000
+
+set TMPOUT = sum_fil.tmp.out.$$
+set TMPIN = sum_fil.tmp.in.$$
+mv $INFILE $TMPIN
+/usr/local/sigproc/bin/sum_fil $TMPIN -obits 8 -o $TMPOUT -qlen 10000
+mv $TMPIN $INFILE
+mv $TMPOUT $OUTFILE
+ 
+if (! -f $OUTFILE) then
+  echo "failed during sum_fil - exiting" 
+  exit 1
+endif
+
+set OUTSIZE = `/bin/ls -l $OUTFILE |& awk '{print $5}'`
+if (x$OUTSIZE == x0) then 
+  echo "zero length output file - exiting"
+  exit 1
+endif 
+
+echo "success - deleting original file..."
+/bin/rm $INFILE
+
+set END = `date '+%s'`
+set SECONDS = `echo $START $END | awk '{print $2-$1}'`
+echo "32to8fil total: $SECONDS seconds"

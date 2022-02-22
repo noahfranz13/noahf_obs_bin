@@ -1,0 +1,10 @@
+#! /bin/bash
+
+# basic script to ssh to canary host and run canary script from head node
+# so that astrid can call it without having to deal with a hop 
+
+canarynode=bls6
+canarycommand=/datax/users/GBT_logistics/scripts/canary_find_pulsar_only.sh
+
+echo "sshing to $canarynode to run canary.sh..."
+ssh -X $canarynode $canarycommand

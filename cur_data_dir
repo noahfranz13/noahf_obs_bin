@@ -1,0 +1,18 @@
+#! /bin/bash
+
+datadir=`/home/obs/bin/show_mysql |& grep data_dir | awk '{print $NF}'`
+tmpfile=/tmp/cur_data_dir.$$
+
+hosts=`echo blc{0..7}0`
+for i in $hosts; do
+   ssh -o BatchMode=yes -o ConnectTimeout=1 $i "ls -d /datax/dibas/$datadir" >& $tmpfile.$i &
+done
+
+for job in `jobs -p`
+do
+    wait $job
+done
+
+echo -n $datadir" : "
+cat $tmpfile.* | grep -cv "No such"
+rm ${tmpfile}*

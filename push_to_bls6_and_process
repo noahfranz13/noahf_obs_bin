@@ -1,0 +1,27 @@
+#! /bin/csh
+
+set WORKSPACE = /datax/users/GBT_logistics/pulsar_calibrators/processing_hub/tmp
+
+if (x == x$1) then
+  echo push_to_bls6_and_process guppi_base_name, i.e. guppi_12345_23456_DIAG_PSR_J1234+456_0002 
+  exit 0
+endif
+
+set BASENAME = $1
+
+set PATHNAME = `ls /datax/dibas*/*/*/*/*${BASENAME}* | tail -1`
+set DIRNAME = `dirname $PATHNAME`
+
+cd $DIRNAME
+
+echo $DIRNAME
+
+# VERSION: reduce then copy products
+echo "creating pulsar/midres products"
+time /home/obs/bin/rawspec_pulsar_product $BASENAME
+# time /home/obs/bin/gpuspec_pulsar_product $BASENAME
+
+echo "copying results to bls6 workspace: $WORKSPACE"
+time scp blc*${BASENAME}*fil bls6-10-0.gb.nrao.edu:$WORKSPACE
+
+echo "done!"

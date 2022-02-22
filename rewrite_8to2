@@ -1,0 +1,70 @@
+#! /bin/csh 
+
+set TRIGGER = /home/obs/triggers/stop_ramdisk
+set REWRITEEXE = /home/obs/bin/bl_rewrite.rb
+set RAWQUANTEXE = /home/siemion/sw/gbt_seti/bin/raw_quant 
+
+if (x == x$1) then
+  echo "rewrite_8to2 root_dir - does a find starting at root_dir for files to be rewritten, then rewrites them"
+  exit 1
+endif
+
+set MOUNTCOUNT = `mount | grep ramdisk | grep -c ramfs`
+if ($MOUNTCOUNT == 0) then
+  echo -n "trying to start ramdisk on /mnt/ramdisk... "
+  mount -t ramfs -o size=20g ramfs /mnt/ramdisk
+  set MOUNTCOUNT = `mount | grep ramdisk | grep -c ramfs`
+  if ($MOUNTCOUNT == 0) then
+    echo "FAILED! exiting..."
+    exit 1
+  endif
+  echo "success!"
+endif
+
+set THISHOST = `hostname`
+
+set CURDIR = `pwd`
+
+foreach i (`find $1 -name "guppi*.raw" |& grep -v "permission denied" | grep -v 'lost+found' | grep -v '/blc' | grep -v '_2bit_' | grep -v ".2bit.raw"`)
+
+  if (-f $TRIGGER) then
+    echo "triggerfile $TRIGGER exists... exiting"
+    exit 0
+  endif
+  echo -n rewrite working on $i - 
+  echo `date`
+  if (-f ${i}.working) then
+    echo "   .working file exists - skipping!"
+  else 
+    touch ${i}.working
+    set DIRNAME = `dirname $i`
+    set BASENAME = `basename $i`
+    cd $DIRNAME
+    $REWRITEEXE $BASENAME 
+    if ($status == 0) then
+      echo " - success"
+      set PULSAR = `echo $BASENAME | grep -c PSR`
+      if ($PULSAR == 0) then 
+        echo -n 8to2bit working on $i -
+        echo `date`
+        set newbasefilename = "${THISHOST}_2bit_$BASENAME"
+        set newfilename = "$DIRNAME/$newbasefilename"
+        $RAWQUANTEXE -i /mnt/ramdisk/${THISHOST}_$i -o $newfilename >& /dev/null
+        if ($status == 0) then
+          echo " - success - deleting."
+          /bin/rm /mnt/ramdisk/${THISHOST}_$i
+          /bin/rm $DIRNAME/$BASENAME      
+        else 
+          echo " - ERROR"
+        endif   
+      else
+        echo "it's a pulsar.. skipping 8to2..."
+        mv /mnt/ramdisk/${THISHOST}_${BASENAME} .
+        /bin/rm $DIRNAME/$BASENAME      
+      endif
+    endif
+    cd $CURDIR
+    /bin/rm ${i}.working
+  endif
+
+end

@@ -1,0 +1,13 @@
+#! /bin/bash
+
+for i in `/home/obs/bin/megasas_status | grep "Hotspare Information" | awk '{i=NF-2; printf("%s ",$i)}; END {printf("\n");}'`; do
+  echo -n $i" "
+  type="G"
+  actualtype=`/usr/local/bin/megacli -pdinfo -physdrv $i -a0 | grep '^Type:' | awk '{print $2}' | uniq`
+  if [ "$actualtype" == "Dedicated" ]; then
+    type=`/usr/local/bin/megacli -pdinfo -physdrv $i -a0 | grep '^Array #:' | awk '{print $NF}' | uniq` 
+  fi 
+  echo -n '('$type') '
+done
+echo " "
+

@@ -1,0 +1,260 @@
+#! /bin/csh
+
+# do_gpuspec top_data_dir [hostname_override]
+
+# scan for all .raw files under top_data_dir and run gpuspec on all possible data
+
+# if we aren't observing (as dictated by the contents of file $OBSERVINGSTATUS) and
+#    we aren't already running (as dictated by the existence of $HOSTRUNNING trigger file) then
+#    * fire off a gpuspec loop on all potential raw data (basically ever observation that starts with *.0000.raw)
+#      * check to see if $TRIGGER exists (human may create it to stop all gpuspecs) - if so, exit
+#      * run bl_fixup.rb on all the respective .raw files of this observation
+#      * run gpuspec with parameters based on 2 or 8 bit data, and block size of raw data
+#      * run an 8-bitter on the pulsar product 
+#      * if no "DIAG" string found in the path, check file sized of .fil products - if sane, delete .raw files
+#
+
+##### PARKES/cuda-8.0
+setenv PATH /usr/local/cuda-8.0/bin:$PATH
+setenv LD_LIBRARY_PATH /usr/local/cuda-8.0/lib64:/usr/local/listen/lib
+
+set TRIGGER = /home/obs/triggers/stop_gpuspec
+# set TRIGGER = /home/obs/triggers/stop_gpuspec_NOT_REALLY # uncomment this is you want it to run whenever
+set SAH_HOSTS = /home/obs/triggers/sah_hosts
+set RAWQUANTEXE = /usr/local/listen/bin/raw_quant
+
+set OBSERVINGSTATUS = /home/obs/triggers/observation_status
+
+#set GPUSPECEXE = /usr/local/listen/bin/gpuspec
+set GPUSPECEXE = /usr/local/listen/bin/gpuspec2
+
+set RAWSPECEXE = /usr/local/bin/rawspec
+
+set TMPFILE = /tmp/gpuspec.tmp.$$
+
+set TWOBITBLOCKSIZE = 33069312
+
+if (x == x$1) then
+  echo "which root directory?"
+  exit 1
+endif
+
+if (x == x$2) then
+  set HOSTNAME = `hostname`
+else 
+  set HOSTNAME = $2
+endif
+
+set ISCRON = "no"
+
+set THISDIR = `pwd`
+
+set HOSTRUNNING = /home/obs/triggers/gpuspec_${HOSTNAME}_running
+
+# # check obs status
+
+#if (-f $OBSERVINGSTATUS) then
+#  if (`cat $OBSERVINGSTATUS` == "off") then 
+#    set NOW = `date '+%s'`
+#    set FILETIME = `/bin/ls -l --time-style="+%s" $OBSERVINGSTATUS | awk '{print $6}'`
+#    set DELTA = `echo $NOW $FILETIME | awk '{print $1-$2}'`
+#    if ($DELTA > 60) then # half hour safe enough?
+#      echo "safe to start since we haven't been observing for 30 minutes..."
+#    else 
+#      echo "stopped less than 30 minutes ago.. not safe yet...."
+#      exit 0
+#    endif
+#  else 
+#    echo -n "currently observing (and shortly after stopping)... "
+#    date
+#    exit 0
+#  endif
+#endif
+
+# check if host running 
+
+if (-f $HOSTRUNNING) then
+  # only report if not in a cron job (otherwise log will get noisy)
+  if ($ISCRON == "no") then 
+    echo "gpuspec is already running on host $HOSTNAME - exiting..."
+    echo "remove triggerfile: $HOSTRUNNING if you feel this is bogus"
+    echo " "
+    echo "output of pgrep -fl gpuspec:"
+    echo " "
+    pgrep -fl gpuspec
+  endif
+  exit 1
+endif
+
+touch $HOSTRUNNING
+
+foreach i (`find $1 -name "*guppi*raw" -print | sed 's/.[0-9][0-9][0-9][0-9].raw//' | sort | uniq`)
+
+  if (-f $TRIGGER) then
+    echo "stopping because triggerfile: $TRIGGER exists..."
+    rm $HOSTRUNNING
+    exit 0
+  endif
+
+  cd $THISDIR
+
+  set BASENAME = `basename $i`
+  set DIRNAME = `dirname $i`
+
+  cd $DIRNAME
+
+  echo $i
+  echo =====================================================================
+
+  set START = `date '+%s'`
+  echo -n "starting: "
+  date
+
+  set GSERROR = 0
+
+  set BITS = 8
+  set TWOBIT = `ls ${BASENAME}.[0-9][0-9][0-9][0-9].raw |& grep -c "_2bit"`
+  if ($TWOBIT > 0) then
+    set BITS = 2
+  endif
+  echo "setting bit depth to $BITS"
+
+  # is the a _999_ set? 1 = yes, 0 = no 
+  # set ISBL = `fold -w 80 *raw | head -80 | grep -a PROJID | grep -c _999_`
+  set ISBL = `/home/obs/bin/is_bl_session $i | grep -c yes`
+
+  set BLOCSIZE = `fold -w 80 *raw | head -80 | grep -a BLOCSIZE | awk '{print $2}'`
+  echo BLOCSIZE : $BLOCSIZE
+  # original version if BLOCSIZE = 132251648
+  set PRODUCTS = "-f 1033216,8,1024 -t 51,128,3027"
+  if ($BLOCSIZE == 134217728) then
+    set PRODUCTS = "-f 1048576,8,1024 -t 51,128,3072"
+#    set PRODUCTS = "-f 1048576,8,1024 -t 3,128,3072" # for one second high freq resolution!
+  endif
+  if ($BLOCSIZE == 129499136) then
+    set PRODUCTS = "-f 999424,8,1024 -t 51,128,2928"
+  endif
+
+  if (-f ${BASENAME}.gpuspec.0000.fil && ! -z ${BASENAME}.gpuspec.0000.fil) then
+    echo ".fil files exist - already reduced - skipping fixup/gpuspec..."
+  else 
+
+    /usr/local/bin/bl_fixup.rb ${BASENAME}.[0-9][0-9][0-9][0-9].raw |& tee $TMPFILE
+    if ($status == 1) then
+      echo "error during fixup..."
+      foreach BADFILE (`awk '$3=="error" {print $1}' $TMPFILE`)
+        # mv $BADFILE bad_${BADFILE}.corrupted_headers 
+        echo DEBUG - not actually doing: mv $BADFILE bad_${BADFILE}.corrupted_headers 
+      end
+    endif
+
+    if (-f $SAH_HOSTS) then 
+      set IS_THERE = `grep -c $HOSTNAME $SAH_HOSTS`
+      if ($IS_THERE > 0) then
+        if (! -d /datax2/DIAG_4sah) then
+          mkdir /datax2/DIAG_4sah
+        endif
+        foreach DOTHIS (`ls ${BASENAME}.[0-9][0-9][0-9][0-9].raw`)
+          set newname = ${HOSTNAME}_2bit_$DOTHIS
+          $RAWQUANTEXE -i $DOTHIS -o /datax2/DIAG_4sah/$newname
+        end
+      endif
+    endif
+    
+    numactl --cpunodebind 1 $GPUSPECEXE -i ${BASENAME}.[0-9][0-9][0-9][0-9].raw -b $BITS -B 2 $PRODUCTS -o ${BASENAME}.gpuspec.
+
+    if ($status == 1) then
+      echo "error during gpuspec..."
+      set GSERROR = 1
+    endif
+
+    echo -n "ending: "
+    date
+
+    set CHECKGP = `echo ${i} | grep -ci 'BLGCsurvey'`
+    if ($CHECKGP == 1 ) then # make .0003.fil hi time res using rawspec
+      echo "running extra reduction step for BLGCsurvey target..."
+      echo -n "starting: "
+      date
+      $RAWSPECEXE $i -p 1 -f 32 -t 4 -o 3 
+      echo -n "ending : "
+      date
+    endif
+
+  endif # already gpuspec'ed
+
+  set BLOCKDIV = `echo $TWOBITBLOCKSIZE $BITS | awk '{printf("%d\n",($1/2)*$2)}'`
+
+  set NUMBLOCKS = `ls -l ${BASENAME}.[0-9][0-9][0-9][0-9].raw | awk '{ total += $5 }; END { printf("%d\n",(total/'$BLOCKDIV')) }' `
+  echo "number of guppi_daq blocks in file set: $NUMBLOCKS"
+
+  set EXPECTED0 = 1700000 
+  set EXPECTED1 = 100000  # 1009 
+  # set EXPECTED1 = 960000 # 128 should be this eventually once older gpuspeced data is cleared off
+  set EXPECTED2 = 40000 
+
+  set SIZE0 = `ls -l ${BASENAME}.gpuspec.0000.fil |& awk '{printf("%d\n", ($5 / '$EXPECTED0') )}'`
+  set SIZE1 = `ls -l ${BASENAME}.gpuspec.0001.fil |& awk '{printf("%d\n", ($5 / '$EXPECTED1') )}'`
+  set SIZE2 = `ls -l ${BASENAME}.gpuspec.0002.fil |& awk '{printf("%d\n", ($5 / '$EXPECTED2') )}'`
+
+  if ($SIZE0 == "No") then
+    set SIZE0 = 0
+  endif
+  if ($SIZE1 == "No") then
+    set SIZE1 = 0
+  endif
+  if ($SIZE2 == "No") then
+    set SIZE2 = 0
+  endif
+
+  echo "low estimation of bytes per block in .fil files: $EXPECTED0 $EXPECTED1 $EXPECTED2"
+  echo "approx num blocks in .fil files (divided by block size): $SIZE0 $SIZE1 $SIZE2" 
+  echo "actual .fil files:"
+  ls -l ${BASENAME}.gpuspec.000?.fil
+
+  if ( ($GSERROR == 0) && ($SIZE0 > $NUMBLOCKS) && ($SIZE1 > $NUMBLOCKS) && ($SIZE2 > $NUMBLOCKS) ) then
+    # No longer creating 8 bit version of 0001 product per node. Just after splicing... 8/25/16
+    # echo "creating 8 bit version of 0001 product using sim_fil:"
+    # /usr/local/sigproc/bin/sum_fil ${BASENAME}.gpuspec.0001.fil -obits 8 -o ${BASENAME}.gpuspec.8.0001.fil -qlen 10000
+    # set CHECKNAME = `echo ${BASENAME} | grep -c '_DIAG_'`
+    set CHECKNAME = `echo ${i} | grep -ci 'DIAG'`
+    if ($CHECKNAME == 0) then
+      if ($ISBL == 1) then 
+        echo ".fil files are big enough - deleting the following .raw files:"
+        ls -l ${BASENAME}.[0-9][0-9][0-9][0-9].raw |& tee ${BASENAME}.raw_files_deleted
+        # echo "SPECIAL CASE: NOT DELETING TO BE SAFE"
+        /bin/rm -f ${BASENAME}.[0-9][0-9][0-9][0-9].raw
+      else 
+        echo "Not a _999_ source - not deleting!"
+      endif
+    else 
+      echo "DIAG source - not deleting!"
+    endif
+    set CHECKNAME = `echo ${BASENAME} | grep -c '^blc[0-9]'`
+    if ($CHECKNAME == 0) then
+      echo "renaming guppi_ files to add blcXY prefix:"
+      foreach j (`ls ${BASENAME}*`)
+        set NEWNAME = ${HOSTNAME}_$j
+        echo mv $j $NEWNAME
+        mv $j $NEWNAME
+      end
+    endif
+    # ALL DONE - create this file to let everybody know (note checkname still being used from above "blc" check)
+    if ($CHECKNAME == 0) then
+      touch ${HOSTNAME}_${BASENAME}.gpuspec.done
+    else
+      touch ${BASENAME}.gpuspec.done
+    endif
+  else
+    echo "not deleting/renaming .raw files due to error (.fil files are missing or not big enough)!"
+  endif
+
+  set END = `date '+%s'`
+  set DIFF = `echo $START $END | awk '{print $2-$1}'`
+  echo number of total seconds: $DIFF
+  echo ====================================
+
+end
+
+# no more files - show's over - remove running trigger and exit
+rm $HOSTRUNNING

@@ -1,0 +1,8 @@
+#! /bin/csh
+
+#foreach i (`ls -1 $1/guppi*_B[0-9]_*raw | sed s/.0000.raw//`)
+#  echo $i
+#  /usr/local/listen/bin/gpuspec -i ${i}.0000.raw -b 8 -B 2 -f 1033216 -t 50 -o ${i}.gpuspec.birdie.
+# end
+
+/usr/local/listen/bin/gpuspec -i $1 -b 8 -B 2 -f 1048576 -t 20 -o ${1}.gpuspec.birdie.

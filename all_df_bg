@@ -1,0 +1,5 @@
+#! /bin/bash
+
+partition="${@:-/datax}"
+
+/home/obs/bin/all_nodes_bg -n "df -h "$partition" | tail -n +2" | column -c 120 | awk '{print $0}; NR%8==0 && NR < 30 {printf("===\n")}'

@@ -1,0 +1,8 @@
+#! /bin/bash
+
+for i in `/home/obs/bin/all_nodes_bg /home/obs/bin/obs_get_targets | grep -v "^blc" | grep -v ===== | awk -F_ '{print $NF,$0}' | sort | uniq -c | awk '{printf("%s,%s\n",$3,$1)}'`; do
+  target=`echo $i | awk -F, '{print $1}'`
+  count=`echo $i | awk -F, '{print $2}'`
+  minutes=`/home/obs/bin/obs_get_all_target_sizes $target`
+  echo $target $count $minutes
+done

@@ -1,0 +1,6 @@
+#! /bin/csh
+
+foreach i (`find /data /datax -name "*.working" -print`)
+  echo $i
+  /bin/rm -f $i
+end

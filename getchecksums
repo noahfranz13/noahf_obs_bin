@@ -1,0 +1,10 @@
+#! /bin/bash
+
+for i in `find /datax /datax2 /datax3 -name "*guppi*"`; 
+  do
+    HEAD=`head -c 16384 $i | md5sum | awk '{print $1}'`
+    TAIL=`tail -c 16384 $i | md5sum | awk '{print $1}'`
+    echo "$i : $HEAD $TAIL"
+  done
+    
+
