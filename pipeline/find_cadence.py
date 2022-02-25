@@ -12,7 +12,7 @@ def findCadences(targets):
     cadences = {}
     for tt in targetObjs:
 
-        observations = c.fetch_observation_by_target(tt.id)
+        observations = c.fetch_observations_by_target(tt.id)
         for obs in observations:
 
             tags = c.fetch_tags_for_observation_id(obs.id)
