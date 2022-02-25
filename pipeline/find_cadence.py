@@ -31,7 +31,9 @@ def main():
     parser.add_argument('--targs', help='File with list of string target names to search for cadences for', default=None)
     args = parser.parse_args()
 
-    cadences = findCadences(args.targs)
+    targs = np.loadtxt(args.targs, dtype=str, delimiter='\n')
+
+    cadences = findCadences(targs)
     pd.DataFrame(cadences).to_csv(os.path.join(os.getcwd()), 'cadences.csv')
 
 
