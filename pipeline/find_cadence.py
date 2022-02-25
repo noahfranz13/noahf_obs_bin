@@ -1,6 +1,7 @@
 import sys, os
 import bldw
 import pandas as pd
+import numpy as np
 
 def findCadence(targets):
 
