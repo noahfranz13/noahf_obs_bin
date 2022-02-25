@@ -17,10 +17,10 @@ def findCadences(targets):
 
             tags = c.fetch_tags_for_observation_id(obs.id)
             for tag in tags:
-                print(tag)
-                if tag.name.startswith('ABGT'):
-                    cads = c.fetch_cadences_for_session(tag)
-                    print(cads)
+                #print(tag.name.startswith('AGBT'))
+                if tag.name.startswith('AGBT'):
+                    cads = c.fetch_cadences_for_session(tag.name)
+                    #print(1)
                     cadences[tt.name] = cads
 
     return cadences
@@ -36,7 +36,8 @@ def main():
     targs = np.loadtxt(args.targs, dtype=str, delimiter='\n')
 
     cadences = findCadences(targs)
-    pd.DataFrame(cadences).to_csv(os.path.join(os.getcwd(), 'cadences.csv'))
+    print(cadences)
+    #pd.DataFrame(cadences).to_csv(os.path.join(os.getcwd(), 'cadences.csv'))
 
 
 if __name__ == '__main__':
