@@ -5,24 +5,22 @@ import numpy as np
 
 def findCadences(targets):
 
-    print(targets)
     c = bldw.Connection()
 
     targetObjs = [c.fetch_targets_by_name(tt)[0] for tt in targets]
 
-    print(targetObjs)
-
     cadences = {}
     for tt in targetObjs:
-        print(tt)
+
         observations = c.fetch_observations_by_target(tt.id)
         for obs in observations:
 
             tags = c.fetch_tags_for_observation_id(obs.id)
             for tag in tags:
-
+                print(tag)
                 if tag.name.startswith('ABGT'):
                     cads = c.fetch_cadences_for_session(tag)
+                    print(cads)
                     cadences[tt.name] = cads
 
     return cadences
