@@ -5,13 +5,16 @@ import numpy as np
 
 def findCadences(targets):
 
+    print(targets)
     c = bldw.Connection()
 
     targetObjs = [c.fetch_targets_by_name(tt) for tt in targets]
 
+    print(targetObjs)
+
     cadences = {}
     for tt in targetObjs:
-
+        print(tt)
         observations = c.fetch_observations_by_target(tt.id)
         for obs in observations:
 
