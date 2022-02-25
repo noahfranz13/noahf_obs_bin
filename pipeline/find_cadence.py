@@ -8,7 +8,7 @@ def findCadences(targets):
     print(targets)
     c = bldw.Connection()
 
-    targetObjs = [c.fetch_targets_by_name(tt) for tt in targets]
+    targetObjs = [c.fetch_targets_by_name(tt)[0] for tt in targets]
 
     print(targetObjs)
 
@@ -38,7 +38,7 @@ def main():
     targs = np.loadtxt(args.targs, dtype=str, delimiter='\n')
 
     cadences = findCadences(targs)
-    pd.DataFrame(cadences).to_csv(os.path.join(os.getcwd()), 'cadences.csv')
+    pd.DataFrame(cadences).to_csv(os.path.join(os.getcwd(), 'cadences.csv'))
 
 
 if __name__ == '__main__':
