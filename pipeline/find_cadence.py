@@ -17,11 +17,11 @@ def findCadences(targets):
 
             tags = c.fetch_tags_for_observation_id(obs.id)
             for tag in tags:
-                #print(tag.name.startswith('AGBT'))
                 if tag.name.startswith('AGBT'):
                     cads = c.fetch_cadences_for_session(tag.name)
-                    #print(1)
                     cadences[tt.name] = cads
+                    for cad in cads:
+                        print(cad.representative_freqs())
 
     return cadences
 
