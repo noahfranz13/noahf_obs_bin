@@ -21,7 +21,7 @@ def findCadences(targets):
                     cads = c.fetch_cadences_for_session(tag.name)
                     cadences[tt.name] = cads
                     for cad in cads:
-                        cad.populate_metas()
+                        cad.populate_metas(c)
                         print(cad.representative_freqs())
 
     return cadences
