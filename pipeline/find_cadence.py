@@ -22,7 +22,7 @@ def findCadences(targets):
                 if tag.name.startswith('AGBT'):
                     #cads = c.fetch_cadences_for_session(tag.name)
                     for cad in good_cadences_for_session(c, tag.name):
-                        print(cad)
+                        print(cad.align_metas(1500))
                     '''for cad in cads:
                         cad.populate_metas(c)
                         repFreqs = cad.representative_freqs()
