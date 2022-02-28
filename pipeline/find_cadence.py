@@ -19,14 +19,14 @@ def findCadences(targets):
             for tag in tags:
                 if tag.name.startswith('AGBT'):
                     cads = c.fetch_cadences_for_session(tag.name)
-                    for cad in cads:
+                    for cad in good_cadences_for_session(c, tag.name):
+                        print(cad)
+                    '''for cad in cads:
                         cad.populate_metas(c)
                         repFreqs = cad.representative_freqs()
                         for f in repFreqs:
                             if f > 1000 and f < 2000:
-                                cadences[tt.name] = cads
-
-    print(cadences)
+                                cadences[tt.name] = cads'''
 
     return cadences
 
