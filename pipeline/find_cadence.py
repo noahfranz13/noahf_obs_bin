@@ -15,19 +15,19 @@ def findCadences(targets):
     for tt in targetObjs:
 
         observations = c.fetch_observations_by_target(tt.id)
+        sessions = []
         for obs in observations:
 
             tags = c.fetch_tags_for_observation_id(obs.id)
-            sessions = []
             for tag in tags:
                 if tag.name.startswith('AGBT'):
                     sessions.append(tag.name)
-            print(sessions)
-            for s in sessions:
-                for cad in good_cadences_for_session(c, s):
-                    metaList = cad.align_metas(1500)
-                    if len(metaList) > 0:
-                        cadences[tt.name] = [m.filename() for m in metaList[0]]
+        print(sessions)
+        for s in sessions:
+            for cad in good_cadences_for_session(c, s):
+                metaList = cad.align_metas(1500)
+                if len(metaList) > 0:
+                    cadences[tt.name] = [m.filename() for m in metaList[0]]
 
     return cadences
 
