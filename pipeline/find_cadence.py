@@ -22,7 +22,7 @@ def findCadences(targets):
                 if tag.name.startswith('AGBT'):
                     #cads = c.fetch_cadences_for_session(tag.name)
                     for cad in good_cadences_for_session(c, tag.name):
-                        metaList = cad.align_metas(1500)
+                        metaList = cad.align_metas(1500)[0]
                         if 0 < len(metaList) <= 6:
                             cadences[tt.name] = [m.filename() for m in metaList]
                     '''for cad in cads:
