@@ -24,6 +24,8 @@ def findCadences(targets):
                     for cad in good_cadences_for_session(c, tag.name):
                         metaList = cad.align_metas(1500)
                         if len(metaList) == 6:
+                            print(metaList)
+                            print([m.filename() for m in metaList[0]])
                             cadences[tt.name] = [m.filename() for m in metaList[0]]
 
                     '''for cad in cads:
