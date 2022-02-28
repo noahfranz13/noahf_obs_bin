@@ -22,11 +22,12 @@ def findCadences(targets):
             for tag in tags:
                 if tag.name.startswith('AGBT'):
                     sessions.append(tag.name)
+
         uqSessions = np.unique(np.array(sessions))
-        print(uqSessions)
         for s in uqSessions:
             for cad in good_cadences_for_session(c, s):
                 metaList = cad.align_metas(1500)
+                print(metaList)
                 if len(metaList) > 0:
                     cadences[tt.name] = [m.filename() for m in metaList[0]]
 
