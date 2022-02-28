@@ -2,6 +2,8 @@ import sys, os
 import bldw
 import pandas as pd
 import numpy as np
+from cadence import good_cadences_for_session
+
 
 def findCadences(targets):
 
@@ -18,10 +20,9 @@ def findCadences(targets):
             tags = c.fetch_tags_for_observation_id(obs.id)
             for tag in tags:
                 if tag.name.startswith('AGBT'):
-                    cads = c.fetch_cadences_for_session(tag.name)
-                    for cad in cads:
-                        for f in cad.good_cadences_for_session(c, tag.name):
-                            print(f)
+                    #cads = c.fetch_cadences_for_session(tag.name)
+                    for cad in good_cadences_for_session(c, tag.name):
+                        print(cad)
                     '''for cad in cads:
                         cad.populate_metas(c)
                         repFreqs = cad.representative_freqs()
