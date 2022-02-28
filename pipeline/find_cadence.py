@@ -22,8 +22,9 @@ def findCadences(targets):
             for tag in tags:
                 if tag.name.startswith('AGBT'):
                     sessions.append(tag.name)
-        print(sessions)
-        for s in sessions:
+        uqSessions = np.unique(np.array(sessions))
+        print(uqSessions)
+        for s in uqSessions:
             for cad in good_cadences_for_session(c, s):
                 metaList = cad.align_metas(1500)
                 if len(metaList) > 0:
