@@ -26,13 +26,21 @@ def findCadences(targets):
 
         # from a unique list of all of the sessions find the cadence and then filenames
         uqSessions = np.unique(np.array(sessions))
+        cads = []
         for s in uqSessions:
             for cad in good_cadences_for_session(c, s):
-                # TODO : Generalize for L, C, S, and X
-                metaList = cad.align_metas(1500) # for now select only L-band files
-                print(metaList)
-                if len(metaList) > 0:
-                    cadences[tt.name] = [m.filename() for m in metaList[0]]
+                if c.fetch_receiver_by_name(s) == 'Rcvr1_2':
+                    cads.append(cad)
+
+
+        for cad in cads:
+            # TODO : Generalize for L, C, S, and X
+            #metaList = cad.align_metas(1500) # for now select only L-band files
+            #print(metaList)
+            #if len(metaList) > 0:
+                #cadences[tt.name] = [m.filename() for m in metaList[0]]
+            cad.populate_metas(c)
+            cadences[tt.name] = [meta.filename() for meta in cad.metas]
 
     return cadences
 
