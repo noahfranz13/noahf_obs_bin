@@ -29,7 +29,7 @@ def findCadences(targets):
         cads = []
         for s in uqSessions:
             for cad in good_cadences_for_session(c, s):
-                if c.fetch_receiver_by_name(s) == 'Rcvr1_2':
+                if c.fetch_receiver_by_name(tt.name) == 'Rcvr1_2':
                     cads.append(cad)
 
 
