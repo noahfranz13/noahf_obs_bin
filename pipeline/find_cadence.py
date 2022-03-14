@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from cadence import good_cadences_for_session
 
-def whichBand(cadence, tol=0.7):
+def whichBand(cadence, tol=100):
     '''
     Return band of a given cadence
     '''
@@ -57,8 +57,7 @@ def findCadences(targets, band='L'):
         cads = []
         for s in uqSessions:
             for cad in good_cadences_for_session(c, s):
-                #freq = cad.representative_freqs()
-                if band == whichBand(cad):
+                if len(cad.metas[0]) != 0 and band == whichBand(cad):
                     print(freq)
                     #cads.append(cad)
 
