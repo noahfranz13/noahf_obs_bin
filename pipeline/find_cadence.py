@@ -4,8 +4,33 @@ import pandas as pd
 import numpy as np
 from cadence import good_cadences_for_session
 
+def whichBand(cadence, tol=0.7):
+    '''
+    Return band of a given cadence
+    '''
 
-def findCadences(targets):
+    meta = cad.metas[0]
+    minf = meta.freq_low
+    maxf = meta.freq_high
+
+    L = [1100, 1900]
+    S = [1800, 2800]
+    C = [4000, 7800]
+    X = [7800, 11200]
+
+    if abs(minf-L[0]) < tol and abs(maxf-L[1]) < tol:
+        return 'L'
+    elif abs(minf-S[0]) < tol and abs(maxf-S[1]) < tol:
+        return 'S'
+    elif abs(minf-C[0]) < tol and abs(maxf-C[1]) < tol:
+        return 'C'
+    elif abs(minf-X[0]) < tol and abs(maxf-X[1]) < tol:
+        return 'X'
+    else:
+        return 'NA'
+
+
+def findCadences(targets, band='L'):
 
     c = bldw.Connection()
 
@@ -31,8 +56,8 @@ def findCadences(targets):
         cads = []
         for s in uqSessions:
             for cad in good_cadences_for_session(c, s):
-                freq = cad.representative_freqs()
-                if 1926 in freq:
+                #freq = cad.representative_freqs()
+                if band == whichBand(cad):
                     print(freq)
                     #cads.append(cad)
 
