@@ -10,6 +10,7 @@ def whichBand(cadence, tol=0.7):
     '''
 
     meta = cadence.metas[0]
+    print(meta)
     minf = meta.freq_low
     maxf = meta.freq_high
 
