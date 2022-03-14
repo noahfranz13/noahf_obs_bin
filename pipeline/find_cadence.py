@@ -29,8 +29,9 @@ def findCadences(targets):
         cads = []
         for s in uqSessions:
             for cad in good_cadences_for_session(c, s):
-                if c.fetch_receiver_by_name(tt.name) == 'Rcvr1_2':
-                    cads.append(cad)
+                cad.populate_metas(c)
+                freq = cad.representative_freqs()
+                print(freq)
 
 
         for cad in cads:
@@ -39,7 +40,7 @@ def findCadences(targets):
             #print(metaList)
             #if len(metaList) > 0:
                 #cadences[tt.name] = [m.filename() for m in metaList[0]]
-            cad.populate_metas(c)
+
             cadences[tt.name] = [meta.filename() for meta in cad.metas]
 
     return cadences
