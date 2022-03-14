@@ -34,7 +34,7 @@ def findCadences(targets):
                 freq = cad.representative_freqs()
                 if 1926 in freq:
                     print(freq)
-                    cads.append(cad)
+                    #cads.append(cad)
 
 
         for cad in cads:
