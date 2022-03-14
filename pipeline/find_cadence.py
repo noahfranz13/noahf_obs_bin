@@ -31,9 +31,10 @@ def findCadences(targets):
         cads = []
         for s in uqSessions:
             for cad in good_cadences_for_session(c, s):
-                #cad.populate_metas(c)
                 freq = cad.representative_freqs()
-                print(freq)
+                if 1926 in freq:
+                    print(freq)
+                    cads.append(cad)
 
 
         for cad in cads:
