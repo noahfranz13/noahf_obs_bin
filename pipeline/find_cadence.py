@@ -13,7 +13,9 @@ def findCadences(targets):
 
     cadences = {}
     for tt in targetObjs:
-
+        print()
+        print("TARGET NAME: ", tt)
+        ptint()
         observations = c.fetch_observations_by_target(tt.id)
 
         # get all the relevant session ids
