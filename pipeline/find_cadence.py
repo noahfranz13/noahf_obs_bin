@@ -9,7 +9,7 @@ def whichBand(cadence, tol=0.7):
     Return band of a given cadence
     '''
 
-    meta = cad.metas[0]
+    meta = cadence.metas[0]
     minf = meta.freq_low
     maxf = meta.freq_high
 
