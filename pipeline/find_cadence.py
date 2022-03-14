@@ -58,7 +58,7 @@ def findCadences(targets, band='L'):
         for s in uqSessions:
             for cad in good_cadences_for_session(c, s):
                 if len(cad.metas[0]) > 0 and band == whichBand(cad):
-                    print(freq)
+                    print(cad)
                     #cads.append(cad)
 
 
