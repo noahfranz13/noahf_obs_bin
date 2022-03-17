@@ -76,6 +76,7 @@ def findCadences(targets, band):
         if len(cadenceList) > 6:
             betterCadenceList = []
             for path in cadenceList:
+                print(path[0;5], path[-7:-4])
                 if path[0:5] == '/datag' and path[-7:-4] == '0000':
                     betterCadenceList.append(path)
 
