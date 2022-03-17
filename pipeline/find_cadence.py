@@ -57,16 +57,13 @@ def findCadences(targets, band='L'):
                 for tag in tags:
                     if tag.name.startswith('AGBT'):
                         sessions.append(tag.name)
-        print(sessions)
+
         # from a unique list of all of the sessions find the cadence and then filenames
         uqSessions = np.unique(np.array(sessions))
         cads = []
         for s in uqSessions:
             for cad in good_cadences_for_session(c, s):
-                '''if len(cad.metas[0]) > 0:
-                    print(whichBand(cad))
-                    if band == whichBand(cad):
-                        print('made it through')'''
+                print(cad)
                 cads.append(cad)
 
         for cad in cads:
