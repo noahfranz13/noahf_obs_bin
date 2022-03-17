@@ -39,9 +39,9 @@ def findCadences(targets, band='L'):
 
     cadences = {}
     for tt in targetObjs:
-        print()
-        print("TARGET NAME: ", tt)
-        print()
+        #print()
+        #print("TARGET NAME: ", tt)
+        #print()
         observations = c.fetch_observations_by_target(tt.id)
 
         # get all the relevant session ids
@@ -58,8 +58,8 @@ def findCadences(targets, band='L'):
         for s in uqSessions:
             for cad in good_cadences_for_session(c, s):
                 if len(cad.metas[0]) > 0 and band == whichBand(cad):
-                    print(cad)
-                    #cads.append(cad)
+                    #print(cad)
+                    cads.append(cad)
 
 
         for cad in cads:
