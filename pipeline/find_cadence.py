@@ -60,6 +60,8 @@ def findCadences(targets, band):
                         goodCad = cad
                         break
 
+        # create dictionary of cadences based on the observations
+        cadenceList = []
         if not goodCad:
             print("Can not find information on this target...")
             print("You will need to find session ", uqSessions, " on your own, sorry")
@@ -67,12 +69,19 @@ def findCadences(targets, band):
             for metas in goodCad.metas:
                 for meta in metas:
                     file = meta.filename()
-
                     print("Found: ", file)
-                    if tt.name in cadences.keys():
-                        cadences[tt.name].append(file)
-                    else:
-                        cadences[tt.name] = [file]
+                    cadenceList.append(file)
+
+        # check the file paths in the cadence dictionary so that each cadence only has 6 files
+        if len(cadenceList) > 6:
+            betterCadenceList = []
+            for path in cadenceList:
+                if path[0:5] == '/datag' and path[-7:-4] == '0000':
+                    betterCadenceList.append(path)
+
+            cadenceList = betterCadenceList
+
+        cadences[tt.name] = cadenceList
 
     return cadences
 
