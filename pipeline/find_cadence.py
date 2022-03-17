@@ -17,7 +17,7 @@ def findCadences(targets, band='L'):
     cadences = {}
     for tt in targetObjs:
         print()
-        print("CADENCE FOR : ", tt)
+        print("CADENCE FOR : ", tt.name)
         print()
 
         observations = c.fetch_observations_by_target(tt.id)
@@ -45,8 +45,8 @@ def findCadences(targets, band='L'):
                 if len(metas) > 0:
                     meta = metas[0] # get filename of first observation in the cadence
                     targetname = meta.filename().split('/')[-1].split('_')[-2]
-                    print(targetname, tt)
-                    if targetname == tt:
+                    print(meta.id, tt.id)
+                    if targetname == tt.id:
                         goodCad = cad
                         break
 
