@@ -68,7 +68,6 @@ def findCadences(targets, band='L'):
                 cads.append(cad)
 
         for cad in cads:
-            print(cad.metas)
             for metas in cad.metas:
                 for meta in metas:
                     print("Found: ", meta.filename())
