@@ -39,6 +39,7 @@ def findCadences(targets, band='L'):
     targetObjs = [c.fetch_targets_by_name(tt)[0] for tt in targets]
 
     rcvr = c.fetch_receiver_by_name('Rcvr1_2') # change so that the receiver changes depending on the requested band
+    print('Searching for files observed with: ', rcvr)
 
     cadences = {}
     for tt in targetObjs:
@@ -51,13 +52,12 @@ def findCadences(targets, band='L'):
         # get all the relevant session ids
         sessions = []
         for obs in observations:
-            print(c.fetch_receiver(obs.receiver_id).name)
             if c.fetch_receiver(obs.receiver_id).name == rcvr.name:
                 tags = c.fetch_tags_for_observation_id(obs.id)
                 for tag in tags:
                     if tag.name.startswith('AGBT'):
                         sessions.append(tag.name)
-
+        print(sessions)
         # from a unique list of all of the sessions find the cadence and then filenames
         uqSessions = np.unique(np.array(sessions))
         cads = []
