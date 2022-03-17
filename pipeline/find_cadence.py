@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from cadence import good_cadences_for_session
 
-def whichBand(cadence, tol=100):
+def whichBand(cadence, tol=700):
     '''
     Return band of a given cadence
     '''
