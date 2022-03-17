@@ -81,8 +81,11 @@ def findCadences(targets, band):
             cadenceList = betterCadenceList
 
         if len(cadenceList) > 0:
-            outfile = os.path.join(os.getcwd(), f'{tt.name}-cadence.txt')
-            np.savetxt(outfile, np.array(cadenceList), fmt='%s', delimiter=',',)
+            outDirPath = os.path.join(os.getcwd(), 'cadences')
+            if not os.path.exists(outDirPath):
+                os.makedirs(outDirPath)
+            outfile = os.path.join(outDirPath, f'{tt.name}-cadence.txt')
+            np.savetxt(outfile, np.array(cadenceList), fmt='%s', delimiter=',')
 
 
 def main():
@@ -105,8 +108,6 @@ def main():
         raise ValueError("Please provide valid band, L, S, C, or X")
 
     findCadences(targs, band=args.band)
-    #print(cadences)
-    # pd.DataFrame(cadences).to_csv(os.path.join(os.getcwd(), 'cadences.csv'))
 
 if __name__ == '__main__':
     sys.exit(main())
