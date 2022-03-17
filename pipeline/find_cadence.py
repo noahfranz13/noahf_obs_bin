@@ -51,8 +51,8 @@ def findCadences(targets, band='L'):
         # get all the relevant session ids
         sessions = []
         for obs in observations:
-            print(obs.fetch_receiver(obs.receiver_id))
-            if obs.fetch_receiver(obs.receiver_id) == rcvr:
+            print(c.fetch_receiver(obs.receiver_id))
+            if c.fetch_receiver(obs.receiver_id) == rcvr:
                 tags = c.fetch_tags_for_observation_id(obs.id)
                 for tag in tags:
                     if tag.name.startswith('AGBT'):
