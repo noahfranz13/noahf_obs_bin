@@ -81,7 +81,8 @@ def findCadences(targets, band):
 
             cadenceList = betterCadenceList
 
-        cadences[tt.name] = cadenceList
+        if len(cadenceList) > 0:
+            cadences[tt.name] = cadenceList
 
     return cadences
 
@@ -106,8 +107,8 @@ def main():
         raise ValueError("Please provide valid band, L, S, C, or X")
 
     cadences = findCadences(targs, band=args.band)
-    print(cadences)
-    #pd.DataFrame(cadences).to_csv(os.path.join(os.getcwd(), 'cadences.csv'))
+    #print(cadences)
+    pd.DataFrame(cadences).to_csv(os.path.join(os.getcwd(), 'cadences.csv'))
 
 
 if __name__ == '__main__':
