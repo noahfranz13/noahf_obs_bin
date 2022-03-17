@@ -68,8 +68,15 @@ def findCadences(targets, band='L'):
             #print(metaList)
             #if len(metaList) > 0:
                 #cadences[tt.name] = [m.filename() for m in metaList[0]]
-            print(cad.metas)
-            cadences[tt.name] = [meta.filename() for meta in for metas in cad.metas]
+
+            for metas in cad.metas:
+                for meta in metas:
+
+                    print(meta)
+                    if tt.name in cadences.keys:
+                        cadences[tt.name].append(meta.filename())
+                    else:
+                        cadences[tt.name] = meta.filename()
 
     return cadences
 
