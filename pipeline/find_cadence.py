@@ -25,7 +25,6 @@ def findCadences(targets, band):
     print()
     print('Searching for files observed with: ', rcvr.name)
 
-    cadences = {}
     for tt in targetObjs:
         print()
         print("CADENCE FOR : ", tt.name)
@@ -82,8 +81,8 @@ def findCadences(targets, band):
             cadenceList = betterCadenceList
 
         if len(cadenceList) > 0:
-            cadences[tt.name] = cadenceList
-            print(len(cadenceList))
+            outfile = os.path.join(os.getcwd(), f'{tt.name}-cadence.txt')
+            np.savetxt(np.array(cadenceList), outfile)
 
     return cadences
 
@@ -107,10 +106,9 @@ def main():
     if not args.band or (args.band not in ('L', 'C', 'S', 'X')):
         raise ValueError("Please provide valid band, L, S, C, or X")
 
-    cadences = findCadences(targs, band=args.band)
+    findCadences(targs, band=args.band)
     #print(cadences)
-    pd.DataFrame(cadences).to_csv(os.path.join(os.getcwd(), 'cadences.csv'))
-
+    # pd.DataFrame(cadences).to_csv(os.path.join(os.getcwd(), 'cadences.csv'))
 
 if __name__ == '__main__':
     sys.exit(main())
