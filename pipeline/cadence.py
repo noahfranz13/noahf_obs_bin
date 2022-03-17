@@ -70,7 +70,6 @@ class Cadence(object):
         assert self.metas is None, "only populate_metas once"
         ids = [scan.id for scan in self.scans]
         metas = dw.fetch_metadata_for_observation_ids(ids)
-        print(metas)
         self.metas = []
         for scan in self.scans:
             metas_for_scan = []
