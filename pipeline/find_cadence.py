@@ -89,7 +89,7 @@ def findCadences(targets, band):
             np.savetxt(outfile, np.array(cadenceList), fmt='%s', delimiter=',')
         else:
             for s in uqSessions:
-                missingSessions.append(s)
+                missingSessions.append(s+": "+tt.name)
 
     if len(missingSessions) > 0:
         if not os.path.exists(outDirPath):
