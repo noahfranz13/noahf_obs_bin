@@ -32,8 +32,6 @@ def whichBand(cadence, tol=700):
     else:
         return 'NA'
 
-
-
 def findCadences(targets, band='L'):
 
     c = bldw.Connection()
@@ -45,6 +43,7 @@ def findCadences(targets, band='L'):
         print()
         print("CADENCE FOR : ", tt)
         observations = c.fetch_observations_by_target(tt.id)
+        print(c.fetch_receiver_by_name('Rcvr1_2'))
 
         # get all the relevant session ids
         sessions = []
