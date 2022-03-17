@@ -67,7 +67,7 @@ def findCadences(targets, band='L'):
                 cads.append(cad)
 
         for cad in cads:
-            print(cad.scans)
+            print([s.id for s in cad.scans])
             for metas in cad.metas:
                 print(metas)
                 for meta in metas:
