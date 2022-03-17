@@ -38,31 +38,35 @@ def findCadences(targets, band='L'):
 
     targetObjs = [c.fetch_targets_by_name(tt)[0] for tt in targets]
 
+    rcvr = c.fetch_receiver_by_name('Rcvr1_2') # change so that the receiver changes depending on the requested band
+
     cadences = {}
     for tt in targetObjs:
         print()
         print("CADENCE FOR : ", tt)
+        print()
+
         observations = c.fetch_observations_by_target(tt.id)
-        print(c.fetch_receiver_by_name('Rcvr1_2'))
 
         # get all the relevant session ids
         sessions = []
         for obs in observations:
-            tags = c.fetch_tags_for_observation_id(obs.id)
-            for tag in tags:
-                if tag.name.startswith('AGBT'):
-                    sessions.append(tag.name)
+            if obs.receiver_id() == rcvr:
+                tags = c.fetch_tags_for_observation_id(obs.id)
+                for tag in tags:
+                    if tag.name.startswith('AGBT'):
+                        sessions.append(tag.name)
 
         # from a unique list of all of the sessions find the cadence and then filenames
         uqSessions = np.unique(np.array(sessions))
         cads = []
         for s in uqSessions:
             for cad in good_cadences_for_session(c, s):
-                if len(cad.metas[0]) > 0:
+                '''if len(cad.metas[0]) > 0:
                     print(whichBand(cad))
                     if band == whichBand(cad):
-                        print('made it through')
-                        cads.append(cad)
+                        print('made it through')'''
+                cads.append(cad)
 
         for cad in cads:
             for metas in cad.metas:
