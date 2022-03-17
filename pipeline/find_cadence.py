@@ -38,6 +38,10 @@ def findCadences(targets, band='L'):
             for cad in good_cadences_for_session(c, s):
                 cads.append(cad)
 
+        # get correct cadence
+        for cad in cads:
+            cad.show()
+
         for cad in cads:
             for metas in cad.metas:
                 for meta in metas:
