@@ -64,12 +64,12 @@ def findCadences(targets, band='L'):
         cads = []
         for s in uqSessions:
             for cad in good_cadences_for_session(c, s):
+                print(cad.metas)
                 cads.append(cad)
 
         for cad in cads:
             print(cad.metas)
             for metas in cad.metas:
-                print(metas)
                 for meta in metas:
                     print("Found: ", meta.filename())
                     if tt.name in cadences.keys():
