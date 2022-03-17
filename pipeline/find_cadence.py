@@ -40,21 +40,19 @@ def findCadences(targets, band='L'):
     for tt in targetObjs:
         print()
         print("CADENCE FOR : ", tt)
-        print()
         observations = c.fetch_observations_by_target(tt.id)
-        print(observations)
 
         # get all the relevant session ids
         sessions = []
         for obs in observations:
             tags = c.fetch_tags_for_observation_id(obs.id)
-            print(tags)
             for tag in tags:
                 if tag.name.startswith('AGBT'):
                     sessions.append(tag.name)
 
         # from a unique list of all of the sessions find the cadence and then filenames
         uqSessions = np.unique(np.array(sessions))
+        print(uqSessions)
         cads = []
         for s in uqSessions:
             for cad in good_cadences_for_session(c, s):
