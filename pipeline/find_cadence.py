@@ -39,7 +39,7 @@ def findCadences(targets, band='L'):
     cadences = {}
     for tt in targetObjs:
         print()
-        print("TARGET NAME: ", tt)
+        print("CADENCE FOR : ", tt)
         print()
         observations = c.fetch_observations_by_target(tt.id)
 
@@ -67,7 +67,7 @@ def findCadences(targets, band='L'):
                     if tt.name in cadences.keys():
                         cadences[tt.name].append(meta.filename())
                     else:
-                        cadences[tt.name] = meta.filename()
+                        cadences[tt.name] = [meta.filename()]
 
     return cadences
 
