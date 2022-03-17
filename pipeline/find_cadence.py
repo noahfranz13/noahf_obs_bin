@@ -4,13 +4,24 @@ import pandas as pd
 import numpy as np
 from cadence import good_cadences_for_session
 
-def findCadences(targets, band='L'):
+def findCadences(targets, band):
 
     c = bldw.Connection()
 
     targetObjs = [c.fetch_targets_by_name(tt)[0] for tt in targets]
 
-    rcvr = c.fetch_receiver_by_name('Rcvr1_2') # change so that the receiver changes depending on the requested band
+    # get receiver based on input band
+    if band == 'L':
+        rcvr = c.fetch_receiver_by_name('Rcvr1_2')
+    elif band == 'S':
+        rcvr = c.fetch_receiver_by_name('Rcvr2_3')
+    elif band == 'C':
+        rcvr = c.fetch_receiver_by_name('Rcvr1_2')
+    elif band == 'X':
+        rcvr = c.fetch_receiver_by_name('Rcvr1_2')
+    else:
+        raise ValueError("Provide valid band")
+
     print()
     print('Searching for files observed with: ', rcvr.name)
 
@@ -18,7 +29,6 @@ def findCadences(targets, band='L'):
     for tt in targetObjs:
         print()
         print("CADENCE FOR : ", tt.name)
-        print()
 
         observations = c.fetch_observations_by_target(tt.id)
 
@@ -51,7 +61,7 @@ def findCadences(targets, band='L'):
                         break
 
         if not goodCad:
-            print("Can not find information on this target")
+            print("Can not find information on this target...")
             print("You will need to find session ", uqSessions, " on your own, sorry")
         else:
             for metas in goodCad.metas:
@@ -71,6 +81,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--targName', help='Name of single target you want to find a cadence for', default=None)
     parser.add_argument('--targs', help='File with list of string target names to search for cadences for', default=None)
+    parser.add_argument('--band', help='frequency band to find cadence at, must be L, C, S, or X', default=None)
     args = parser.parse_args()
 
     if args.targName:
@@ -80,7 +91,10 @@ def main():
     else:
         raise ValueError("Please either provide a singular target name or file with list of targets")
 
-    cadences = findCadences(targs)
+    if not args.band or (args.band not in ('L', 'C', 'S', 'X')):
+        raise ValueError("Please provide valid band, L, S, C, or X")
+
+    cadences = findCadences(targs, band=args.band)
     print(cadences)
     #pd.DataFrame(cadences).to_csv(os.path.join(os.getcwd(), 'cadences.csv'))
 
