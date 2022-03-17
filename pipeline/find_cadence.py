@@ -47,6 +47,7 @@ def findCadences(targets, band='L'):
                     targetname = meta.filename().split('/')[-1].split('_')[-2]
                     print(targetname)
                     if targetname == tt:
+                        print('here')
                         goodCad = cad
                         break
 
