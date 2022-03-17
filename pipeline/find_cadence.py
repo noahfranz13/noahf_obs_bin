@@ -4,34 +4,6 @@ import pandas as pd
 import numpy as np
 from cadence import good_cadences_for_session
 
-def whichBand(cadence, tol=700):
-    '''
-    Return band of a given cadence
-    '''
-
-    meta = cadence.metas[0][0]
-    minf = meta.freq_low
-    maxf = meta.freq_high
-    print("finding band for frequency (MHz) range: ", minf, maxf)
-
-    L = [1100, 1900]
-    S = [1800, 2800]
-    C = [4000, 7800]
-    X = [7800, 11200]
-
-    # TODO: introduce a tolernace to these relationships
-
-    if L[0] < minf < maxf < L[1]:
-        return 'L'
-    elif S[0] < minf < maxf < S[1]:
-        return 'S'
-    elif C[0] < minf < maxf < C[1]:
-        return 'C'
-    elif X[0] < minf < maxf < X[1]:
-        return 'X'
-    else:
-        return 'NA'
-
 def findCadences(targets, band='L'):
 
     c = bldw.Connection()
