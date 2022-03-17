@@ -39,7 +39,7 @@ class Cadence(object):
         if self.is_bacada():
             return i in (1, 3, 5)
         return None
-    
+
     def show_scan(self, i):
         on = self.is_on(i)
         if on is None:
@@ -48,7 +48,7 @@ class Cadence(object):
             prefix = " on"
         else:
             prefix = "off"
-        print(f"{prefix}: {self.scans[i]}")        
+        print(f"{prefix}: {self.scans[i]}")
 
 
     def show(self):
@@ -62,7 +62,7 @@ class Cadence(object):
             else:
                 print("no representative frequencies")
 
-                
+
     def populate_metas(self, dw):
         """
         Populates metas given a bldw connection.
@@ -70,6 +70,7 @@ class Cadence(object):
         assert self.metas is None, "only populate_metas once"
         ids = [scan.id for scan in self.scans]
         metas = dw.fetch_metadata_for_observation_ids(ids)
+        print(metas)
         self.metas = []
         for scan in self.scans:
             metas_for_scan = []
@@ -77,7 +78,7 @@ class Cadence(object):
                 if m.observation_id == scan.id:
                     metas_for_scan.append(m)
             self.metas.append(metas_for_scan)
-            
+
     @classmethod
     def find_cadences(cls, scan_list):
         """
@@ -129,7 +130,7 @@ class Cadence(object):
             if not all(groups):
                 # One of the observations has nothing, we're done
                 return answer
-            
+
             # Group up by last dir, greedily. Figure out what the most common last dir is
             counts = {}
             for group in groups:
@@ -152,12 +153,12 @@ class Cadence(object):
                     index = 0
                 choices.append(group.pop(index))
             answer.append(tuple(choices))
-            
 
-            
-        
 
-    
+
+
+
+
 # TODO: better fix for these busted cadences
 BAD_CADENCE_RANGES = [
     (370283, 370331),
