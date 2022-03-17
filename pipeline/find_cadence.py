@@ -63,14 +63,13 @@ def findCadences(targets, band='L'):
         uqSessions = np.unique(np.array(sessions))
         cads = []
         for s in uqSessions:
-            print(s)
             for cad in good_cadences_for_session(c, s):
-                print(cad.metas)
                 cads.append(cad)
 
         for cad in cads:
             for metas in cad.metas:
                 for meta in metas:
+                    print(meta.id)
                     print("Found: ", meta.filename())
                     if tt.name in cadences.keys():
                         cadences[tt.name].append(meta.filename())
