@@ -63,6 +63,7 @@ def findCadences(targets, band='L'):
         uqSessions = np.unique(np.array(sessions))
         cads = []
         for s in uqSessions:
+            print(s)
             for cad in good_cadences_for_session(c, s):
                 print(cad.metas)
                 cads.append(cad)
