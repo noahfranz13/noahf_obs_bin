@@ -19,16 +19,19 @@ def whichBand(cadence, tol=700):
     C = [4000, 7800]
     X = [7800, 11200]
 
-    if abs(minf-L[0]) < tol and abs(maxf-L[1]) < tol:
+    # TODO: introduce a tolernace to these relationships
+
+    if L[0] < minf < maxf < L[1]:
         return 'L'
-    elif abs(minf-S[0]) < tol and abs(maxf-S[1]) < tol:
+    elif S[0] < minf < maxf < S[0]:
         return 'S'
-    elif abs(minf-C[0]) < tol and abs(maxf-C[1]) < tol:
+    elif C[0] < minf < maxf < C[1]:
         return 'C'
-    elif abs(minf-X[0]) < tol and abs(maxf-X[1]) < tol:
+    elif X[0] < minf < maxf < X[1]:
         return 'X'
     else:
         return 'NA'
+
 
 
 def findCadences(targets, band='L'):
