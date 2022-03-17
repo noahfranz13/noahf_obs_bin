@@ -39,9 +39,9 @@ def findCadences(targets, band='L'):
 
     cadences = {}
     for tt in targetObjs:
-        #print()
-        #print("TARGET NAME: ", tt)
-        #print()
+        print()
+        print("TARGET NAME: ", tt)
+        print()
         observations = c.fetch_observations_by_target(tt.id)
 
         # get all the relevant session ids
@@ -68,7 +68,7 @@ def findCadences(targets, band='L'):
             #print(metaList)
             #if len(metaList) > 0:
                 #cadences[tt.name] = [m.filename() for m in metaList[0]]
-
+            print(cad.metas)
             cadences[tt.name] = [meta.filename() for meta in cad.metas]
 
     return cadences
