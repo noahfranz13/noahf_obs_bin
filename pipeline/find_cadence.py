@@ -83,6 +83,7 @@ def findCadences(targets, band):
 
         if len(cadenceList) > 0:
             cadences[tt.name] = cadenceList
+            print(len(cadenceList))
 
     return cadences
 
