@@ -82,7 +82,7 @@ def findCadences(targets, band):
 
         if len(cadenceList) > 0:
             outfile = os.path.join(os.getcwd(), f'{tt.name}-cadence.txt')
-            np.savetxt(outfile, np.array(cadenceList), fmt='<U89', delimiter=',',)
+            np.savetxt(outfile, np.array(cadenceList), fmt='%s', delimiter=',',)
 
     return cadences
 
