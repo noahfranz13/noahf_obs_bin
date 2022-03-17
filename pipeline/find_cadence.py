@@ -42,11 +42,13 @@ def findCadences(targets, band='L'):
         print("CADENCE FOR : ", tt)
         print()
         observations = c.fetch_observations_by_target(tt.id)
+        print(observations)
 
         # get all the relevant session ids
         sessions = []
         for obs in observations:
             tags = c.fetch_tags_for_observation_id(obs.id)
+            print(tags)
             for tag in tags:
                 if tag.name.startswith('AGBT'):
                     sessions.append(tag.name)
@@ -63,7 +65,7 @@ def findCadences(targets, band='L'):
         for cad in cads:
             for metas in cad.metas:
                 for meta in metas:
-                    print(meta)
+                    print("Found: ", meta.filename())
                     if tt.name in cadences.keys():
                         cadences[tt.name].append(meta.filename())
                     else:
