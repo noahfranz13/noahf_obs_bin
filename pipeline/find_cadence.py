@@ -52,6 +52,7 @@ def findCadences(targets, band='L'):
 
         if not goodCad:
             print("Can not find information on this target")
+            print("You will need to find session ", uqSessions, " on your own, sorry")
         else:
             for metas in goodCad.metas:
                 for meta in metas:
