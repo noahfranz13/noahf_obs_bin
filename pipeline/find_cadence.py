@@ -23,7 +23,7 @@ def whichBand(cadence, tol=700):
 
     if L[0] < minf < maxf < L[1]:
         return 'L'
-    elif S[0] < minf < maxf < S[0]:
+    elif S[0] < minf < maxf < S[1]:
         return 'S'
     elif C[0] < minf < maxf < C[1]:
         return 'C'
