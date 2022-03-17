@@ -12,6 +12,7 @@ def whichBand(cadence, tol=700):
     meta = cadence.metas[0][0]
     minf = meta.freq_low
     maxf = meta.freq_high
+    print("finding band for frequency (MHz) range: ", minf, maxf)
 
     L = [1100, 1900]
     S = [1800, 2800]
