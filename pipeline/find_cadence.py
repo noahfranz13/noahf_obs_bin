@@ -68,8 +68,8 @@ def findCadences(targets, band='L'):
 
         print(cads)
         for cad in cads:
-            print(cad)
             for metas in cad.metas:
+                print(metas)
                 for meta in metas:
                     print("Found: ", meta.filename())
                     if tt.name in cadences.keys():
