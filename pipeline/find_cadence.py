@@ -39,7 +39,8 @@ def findCadences(targets, band='L'):
     targetObjs = [c.fetch_targets_by_name(tt)[0] for tt in targets]
 
     rcvr = c.fetch_receiver_by_name('Rcvr1_2') # change so that the receiver changes depending on the requested band
-    print('Searching for files observed with: ', rcvr)
+    print()
+    print('Searching for files observed with: ', rcvr.name)
 
     cadences = {}
     for tt in targetObjs:
@@ -67,6 +68,7 @@ def findCadences(targets, band='L'):
 
         print(cads)
         for cad in cads:
+            print(cad)
             for metas in cad.metas:
                 for meta in metas:
                     print("Found: ", meta.filename())
