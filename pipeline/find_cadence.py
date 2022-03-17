@@ -66,8 +66,8 @@ def findCadences(targets, band='L'):
             for cad in good_cadences_for_session(c, s):
                 cads.append(cad)
 
-        print(cads)
         for cad in cads:
+            print(cad.scans)
             for metas in cad.metas:
                 print(metas)
                 for meta in metas:
