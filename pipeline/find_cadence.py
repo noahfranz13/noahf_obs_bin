@@ -10,7 +10,6 @@ def whichBand(cadence, tol=100):
     '''
 
     meta = cadence.metas[0][0]
-    print(meta)
     minf = meta.freq_low
     maxf = meta.freq_high
 
@@ -58,22 +57,14 @@ def findCadences(targets, band='L'):
         for s in uqSessions:
             for cad in good_cadences_for_session(c, s):
                 if len(cad.metas[0]) > 0 and band == whichBand(cad):
-                    #print(cad)
                     cads.append(cad)
 
 
         for cad in cads:
-            # TODO : Generalize for L, C, S, and X
-            #metaList = cad.align_metas(1500) # for now select only L-band files
-            #print(metaList)
-            #if len(metaList) > 0:
-                #cadences[tt.name] = [m.filename() for m in metaList[0]]
-
             for metas in cad.metas:
                 for meta in metas:
-
                     print(meta)
-                    if tt.name in cadences.keys:
+                    if tt.name in cadences.keys():
                         cadences[tt.name].append(meta.filename())
                     else:
                         cadences[tt.name] = meta.filename()
