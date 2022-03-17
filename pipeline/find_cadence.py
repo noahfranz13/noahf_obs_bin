@@ -82,7 +82,7 @@ def main():
 
     if args.targName:
         targs = [args.targName]
-    elif args.targs
+    elif args.targs:
         targs = np.loadtxt(args.targs, dtype=str, delimiter='\n')
     else:
         raise ValueError("Please either provide a singular target name or file with list of targets")
