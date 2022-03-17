@@ -76,10 +76,16 @@ def main():
 
     import argparse
     parser = argparse.ArgumentParser()
+    parser.add_argument('--targName', help='Name of single target you want to find a cadence for', default=None)
     parser.add_argument('--targs', help='File with list of string target names to search for cadences for', default=None)
     args = parser.parse_args()
 
-    targs = np.loadtxt(args.targs, dtype=str, delimiter='\n')
+    if args.targName:
+        targs = [args.targName]
+    elif args.targs
+        targs = np.loadtxt(args.targs, dtype=str, delimiter='\n')
+    else:
+        raise ValueError("Please either provide a singular target name or file with list of targets")
 
     cadences = findCadences(targs)
     print(cadences)
