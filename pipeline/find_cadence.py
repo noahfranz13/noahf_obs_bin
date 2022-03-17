@@ -16,9 +16,9 @@ def findCadences(targets, band):
     elif band == 'S':
         rcvr = c.fetch_receiver_by_name('Rcvr2_3')
     elif band == 'C':
-        rcvr = c.fetch_receiver_by_name('Rcvr1_2')
+        rcvr = c.fetch_receiver_by_name('Rcvr1_2') # FIX THIS
     elif band == 'X':
-        rcvr = c.fetch_receiver_by_name('Rcvr1_2')
+        rcvr = c.fetch_receiver_by_name('Rcvr1_2') # FIX THIS
     else:
         raise ValueError("Provide valid band")
 
@@ -66,11 +66,13 @@ def findCadences(targets, band):
         else:
             for metas in goodCad.metas:
                 for meta in metas:
-                    print("Found: ", meta.filename())
+                    file = meta.filename()
+
+                    print("Found: ", file)
                     if tt.name in cadences.keys():
-                        cadences[tt.name].append(meta.filename())
+                        cadences[tt.name].append(file)
                     else:
-                        cadences[tt.name] = [meta.filename()]
+                        cadences[tt.name] = [file]
 
     return cadences
 
