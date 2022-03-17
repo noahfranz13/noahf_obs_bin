@@ -73,11 +73,11 @@ def findCadences(targets, band):
                     print("Found: ", file)
                     cadenceList.append(file)
 
-        # check the file paths in the cadence dictionary so that each cadence only has 6 files
+        # check the file paths in the cadence dictionary so that each cadence only has datag files
         if len(cadenceList) > 6:
             betterCadenceList = []
             for path in cadenceList:
-                if path[0:6] == '/datag' and path[-7:-3] == '0000':
+                if path[0:6] == '/datag':
                     betterCadenceList.append(path)
 
             cadenceList = betterCadenceList
