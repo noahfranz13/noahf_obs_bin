@@ -25,6 +25,8 @@ def findCadences(targets, band):
     print()
     print('Searching for files observed with: ', rcvr.name)
 
+    missingSessions = []
+    outDirPath = os.path.join(os.getcwd(), 'cadences')
     for tt in targetObjs:
         print()
         print("CADENCE FOR : ", tt.name)
@@ -81,11 +83,19 @@ def findCadences(targets, band):
             cadenceList = betterCadenceList
 
         if len(cadenceList) > 0:
-            outDirPath = os.path.join(os.getcwd(), 'cadences')
             if not os.path.exists(outDirPath):
                 os.makedirs(outDirPath)
             outfile = os.path.join(outDirPath, f'{tt.name}-cadence.txt')
             np.savetxt(outfile, np.array(cadenceList), fmt='%s', delimiter=',')
+        else:
+            for s in uqSessions:
+                missingSessions.append(s)
+
+    if len(missingSessions) > 0:
+        if not os.path.exists(outDirPath):
+            os.makedirs(outDirPath)
+        np.savetxt(os.path.join(outDirPath, 'sessions-with-search-failure.txt'), missingSessions, fmt='%s', delimiter=',')
+
 
 
 def main():
