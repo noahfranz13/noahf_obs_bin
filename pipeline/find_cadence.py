@@ -46,14 +46,13 @@ def findCadences(targets, band='L'):
                     meta = metas[0] # get filename of first observation in the cadence
                     targetname = meta.filename().split('/')[-1].split('_')[-2]
                     if targetname == tt.name:
-                        print('here')
                         goodCad = cad
                         break
 
         if not goodCad:
             print("Can not find information on this target")
         else:
-            for metas in goodCad:
+            for metas in goodCad.metas:
                 for meta in metas:
                     print("Found: ", meta.filename())
                     if tt.name in cadences.keys():
