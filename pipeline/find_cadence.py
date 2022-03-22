@@ -69,18 +69,12 @@ def findCadences(targets, band):
         else:
             for metas in goodCad.metas:
                 for meta in metas:
-                    file = meta.filename()
-                    print("Found: ", file)
-                    cadenceList.append(file)
+                    # check the file paths in the cadence dictionary so that each cadence only has datag files
+                    if file[0:6] == '/datag':
+                        file = meta.filename()
+                        print("Found: ", file)
+                        cadenceList.append(file)
 
-        '''# check the file paths in the cadence dictionary so that each cadence only has datag files
-        if len(cadenceList) > 6:
-            betterCadenceList = []
-            for path in cadenceList:
-                if path[0:6] == '/datag':
-                    betterCadenceList.append(path)
-
-            cadenceList = betterCadenceList'''
 
         if len(cadenceList) > 0:
             if not os.path.exists(outDirPath):
