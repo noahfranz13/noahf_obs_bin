@@ -183,3 +183,19 @@ There are several modes that the pipeline can run in.
 
 The pipeline all runs as the `obs` user. Note that `obs` by default has a different Python environment,
 so the ssh orchestration that uses Python must wrap it in a `conda activate`.
+
+### `find_cadences.py` Usage
+`find_cadences` allows the user to find the cadences that correspond to a target name and GBT receiver. The primary function is `findCadences(targets, band)`. This function takes in both a list of target names as strings and a band as a string. The Band is the GBT receiver to check for observations at and must be either L, C, S, or X. There is also a command line option that includes the options:
+* `targName` -> The name of a single target you want to search for
+* `targs` -> a line separated text file with a list of target names to search for
+* `band` -> The GBT receiver to search for an observation at. Must be L, C, S, or X.
+
+Note that either a `targName` or `targs` must be provided and the band option is mandatory. Example usage using the targName option is
+```
+python3 find_cadence.py --targName HIP12345 --band L
+```
+
+Example usage with an input file with a list of target names is
+```
+python3 find_cadence.py --targs list_of_target_names.txt --band S
+```
