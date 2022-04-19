@@ -16,9 +16,9 @@ def findCadences(targets, band):
     elif band == 'S':
         rcvr = c.fetch_receiver_by_name('Rcvr2_3')
     elif band == 'C':
-        rcvr = c.fetch_receiver_by_name('Rcvr1_2') # FIX THIS
+        rcvr = c.fetch_receiver_by_name('Rcvr4_8') # FIX THIS
     elif band == 'X':
-        rcvr = c.fetch_receiver_by_name('Rcvr1_2') # FIX THIS
+        rcvr = c.fetch_receiver_by_name('Rcvr8_10') # FIX THIS
     else:
         raise ValueError("Provide valid band")
 
